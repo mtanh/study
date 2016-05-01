@@ -5,6 +5,7 @@
  *      Author: anhmt
  */
 
+#include <iostream>
 #include "writeworker.hpp"
 
 WriteWorker::WriteWorker ()
@@ -18,8 +19,10 @@ WriteWorker::~WriteWorker ()
 
 void WriteWorker::PrivateThreadProc ()
 {
-	while (m_threadState == THREAD_STATE_RUNNING)
+	while (Running())
 	{
-		fprintf (stderr, "State: %s\n", ThreadStateStr[(int)m_threadState]);
+		fprintf (stdout, "State: %s\n", ThreadStateStr[(int)m_threadState]);
+		//std::cout << boost::this_thread::get_id() << ": " << ThreadStateStr[(int)m_threadState] << "\n";
+		boost::this_thread::sleep_for (boost::chrono::milliseconds (500));
 	}
 }

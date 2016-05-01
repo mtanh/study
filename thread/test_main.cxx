@@ -21,11 +21,30 @@
 #include <sys/mman.h>
 #include <iostream>
 #include <string>
+#include <boost/container/vector.hpp>
 
 #include "writeworker.hpp"
 
 int main (int argc, char *argv[])
 {
+
+	WriteWorker w;
+	boost::this_thread::sleep_for (boost::chrono::milliseconds (1000));
+	w.Stop ();
+
+	/*
+	boost::container::vector <WorkerThread*> threadGroup;
+	threadGroup.push_back (new WriteWorker ());
+	//threadGroup.push_back (new WriteWorker ());
+
+	boost::container::vector <WorkerThread*>::iterator iter = threadGroup.begin();
+	for (; iter != threadGroup.end(); ++iter)
+	{
+		(*iter)->Stop();
+		(*iter)->Join();
+	}
+	*/
+
 	//boost::scoped_thread<boost::interrupt_and_join_if_joinable> th (boost::ref (f1));
 
 	/*

@@ -30,7 +30,7 @@ class WorkerThread: boost::noncopyable
 	typedef void (WorkerThread::*THREAD_PROC) (void);
 
 public:
-	explicit WorkerThread (bool start = true);
+	explicit WorkerThread (bool autoStart = true);
 	virtual ~WorkerThread ();
 
 	inline bool Running() const { return (m_threadState == THREAD_STATE_RUNNING); }
@@ -38,16 +38,17 @@ public:
 	inline bool Stopped() const { return (m_threadState == THREAD_STATE_STOPPED); }
 
 	bool Start ();
+	void Detach ();
 	void Stop ();
-	void Join ();
 	void ChangeThreadPriority (ThreadPriority p);
+	const ThreadState GetThreadState () const { return m_threadState; }
 
 protected:
 	void ThreadProc (void);
 
 protected:
 	b_thread m_bThread;
-	/*volatile*/ ThreadState m_threadState;
+	volatile ThreadState m_threadState;
 	ThreadPriority m_threadPriority;
 
 private:

@@ -8,14 +8,14 @@
 #include "../common/defines.hpp"
 #include "workerthread.hpp"
 
-WorkerThread::WorkerThread (bool start)
+WorkerThread::WorkerThread (bool autoStart)
 : m_threadState (THREAD_STATE_STOPPED)
 , m_threadPriority (THREAD_PRIORITY_NORMAL)
 , m_threadProc (nullptr)
 {
-	if (start)
+	if (autoStart)
 	{
-		if (Start())
+		if (!Start())
 		{
 			fprintf (stderr, "WorkerThread ctor failed\n");
 		}
@@ -32,14 +32,13 @@ bool WorkerThread::Start ()
 	{
 		if (Running())
 		{
-			WHICHLINE;
 			break;
 		}
 
 		m_threadState = THREAD_STATE_RUNNING;
 		m_threadProc = &WorkerThread::ThreadProc;
 		// Thread Attributions ???
-		b_thread tmp = boost::thread (m_threadProc, this);
+		boost::thread tmp = boost::thread (m_threadProc, this);
 		m_bThread.swap (tmp);
 
 	} while (false);
@@ -47,26 +46,27 @@ bool WorkerThread::Start ()
 	return (Running());
 }
 
-void WorkerThread::Stop ()
+void WorkerThread::Detach ()
 {
-	if (Running() && m_bThread.joinable())
+	if (Running())
 	{
-		m_threadState = THREAD_STATE_PENDING;
-		WHICHFUNC;
-		m_bThread.interrupt ();
-
-		fprintf (stderr, "State: %s\n", ThreadStateStr[(int)m_threadState]);
+		m_bThread.detach ();
 	}
 }
 
-void WorkerThread::Join ()
+void WorkerThread::Stop ()
 {
+	if (Running())
+	{
+		m_threadState = THREAD_STATE_STOPPED;
+	}
+
 	if (m_bThread.joinable())
 	{
 		WHICHFUNC;
-		m_threadState = THREAD_STATE_STOPPED;
 		m_bThread.join ();
-		fprintf (stderr, "State: %s\n", ThreadStateStr[(int)m_threadState]);
+		m_bThread.interrupt ();
+		fprintf (stdout, "State: %s\n", ThreadStateStr[(int)m_threadState]);
 	}
 }
 
@@ -84,11 +84,16 @@ void WorkerThread::ThreadProc ()
 	catch (boost::thread_interrupted& ei)
 	{
 		fprintf (stderr, "Thread interrupted\n");
-		Join();
+		Stop ();
 	}
 	catch (boost::thread_exception& ex)
 	{
 		fprintf (stderr, "%s\n", ex.what());
-		Join();
+		Stop ();
+	}
+	catch (...)
+	{
+		perror ("Failed in WorkerThread::ThreadProc");
+		Stop ();
 	}
 }
