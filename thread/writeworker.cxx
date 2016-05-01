@@ -21,8 +21,8 @@ void WriteWorker::PrivateThreadProc ()
 {
 	while (Running())
 	{
-		fprintf (stdout, "State: %s\n", ThreadStateStr[(int)m_threadState]);
-		//std::cout << boost::this_thread::get_id() << ": " << ThreadStateStr[(int)m_threadState] << "\n";
-		boost::this_thread::sleep_for (boost::chrono::milliseconds (500));
+		//fprintf (stdout, "State: %s\n", ThreadStateStr[(int)m_threadState]);
+		std::cout << boost::this_thread::get_id() << ": " << ThreadStateStr[(int)m_threadState] << "\n";
+		boost::this_thread::sleep_for (boost::chrono::milliseconds (200));
 	}
 }

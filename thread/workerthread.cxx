@@ -63,7 +63,6 @@ void WorkerThread::Stop ()
 
 	if (m_bThread.joinable())
 	{
-		WHICHFUNC;
 		m_bThread.join ();
 		m_bThread.interrupt ();
 		fprintf (stdout, "State: %s\n", ThreadStateStr[(int)m_threadState]);
@@ -84,12 +83,10 @@ void WorkerThread::ThreadProc ()
 	catch (boost::thread_interrupted& ei)
 	{
 		fprintf (stderr, "Thread interrupted\n");
-		Stop ();
 	}
 	catch (boost::thread_exception& ex)
 	{
 		fprintf (stderr, "%s\n", ex.what());
-		Stop ();
 	}
 	catch (...)
 	{
