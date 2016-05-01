@@ -1,3 +1,6 @@
+TODO
 1. test thread cancel in threadmgr
-2. class thread wrapper
+2. thread in stack region
+3. cond val and semaphore execute time measument
+
 
