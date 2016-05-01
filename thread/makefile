@@ -27,10 +27,11 @@ LIB_BOOST_THREAD = $(LBOOSTDIR) -lboost_thread
 
 LIBS = $(LIB_BOOST_SYSTEM) $(LIB_BOOST_THREAD) -lpthread
 
-_DEPS = #terminate.h
+_DEPS =
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = $(CURRENTDIR).o
+#_OBJ = $(CURRENTDIR).o
+_OBJ = test_main.o workerthread.o writeworker.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
