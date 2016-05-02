@@ -8,7 +8,7 @@
 #ifndef THREAD_WRITEWORKER_HPP_
 #define THREAD_WRITEWORKER_HPP_
 
-#include "workerthread.hpp"
+#include "WorkerThread.hpp"
 
 class WriteWorker: public WorkerThread
 {

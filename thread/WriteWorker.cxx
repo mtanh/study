@@ -5,8 +5,9 @@
  *      Author: anhmt
  */
 
+#include "WriteWorker.hpp"
+
 #include <iostream>
-#include "writeworker.hpp"
 
 WriteWorker::WriteWorker ()
 : WorkerThread ()

@@ -5,8 +5,9 @@
  *      Author: anhmt
  */
 
+#include "WorkerThread.hpp"
+
 #include "../common/defines.hpp"
-#include "workerthread.hpp"
 
 WorkerThread::WorkerThread (bool autoStart)
 : m_threadState (THREAD_STATE_STOPPED)

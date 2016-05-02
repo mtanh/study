@@ -23,23 +23,38 @@
 #include <string>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/container/vector.hpp>
+#include <boost/container/list.hpp>
+#include <boost/intrusive/list.hpp>
+#include <boost/thread/locks.hpp>
 
-#include "writeworker.hpp"
+#include "WriteWorker.hpp"
+
+struct animal: public boost::intrusive::list_base_hook<>
+{
+	std::string name;
+	int legs;
+	animal(std::string n, int l)
+	: name { boost::move (n) }
+	, legs { l } {
+	}
+};
+
+typedef boost::intrusive::list<animal> animal_list;
+static animal_list animals;
+
+static void f1()
+{
+	animal a1 { "cat", 4 };
+	animal a2 { "shark", 0 };
+	animal a3 { "spider", 8 };
+
+	animals.push_back(a1);
+	animals.push_back(a2);
+	animals.push_back(a3);
+}
 
 int main (int argc, char *argv[])
 {
-	/*
-	WriteWorker w;
-	WriteWorker w1;
-
-	boost::this_thread::sleep_for (boost::chrono::milliseconds (1000));
-	w.Stop ();
-
-	boost::this_thread::sleep_for (boost::chrono::milliseconds (1000));
-	w1.Stop ();
-	*/
-
-
 	boost::ptr_vector <WorkerThread> threadGroup;
 	threadGroup.push_back (new WriteWorker ());
 	threadGroup.push_back (new WriteWorker ());
@@ -50,7 +65,6 @@ int main (int argc, char *argv[])
 	{
 		(*iter).Stop();
 	}
-
 
 	//boost::scoped_thread<boost::interrupt_and_join_if_joinable> th (boost::ref (f1));
 
