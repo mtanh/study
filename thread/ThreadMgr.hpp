@@ -19,17 +19,28 @@ typedef struct Synchable
 	boost::condition_variable cond_val;
 } Synchable;
 
-template <typename SynchPolicy = Synchable>
-class ThreadMgr: public WorkerThread {
+template <
+	typename MonitorWorker
+	, typename ThreadBase
+	>
+class ThreadMgr {
 public:
 	ThreadMgr();
 	virtual ~ThreadMgr();
 
-protected:
+	void Start();
+	void Stop();
+	void Run(ThreadBase*);
 
 private:
-	unsigned short m_maxThreads; // A maximum thread object that ThreadMgr can support
-	unsigned short m_minThreads; // A minimum thread object that ThreadMgr can start up
+	void StartThread ();
+
+private:
+	typedef unsigned short small_value;
+	small_value m_maxThreads; // A maximum thread object that ThreadMgr can support
+	small_value m_minThreads; // A minimum thread object that ThreadMgr can start up
+	small_value m_numIdleThreads;
+	small_value m_numRunningThreads;
 
 	typedef boost::ptr_deque <WorkerThread> PWORKER_THREAD_LIST;
 	PWORKER_THREAD_LIST::iterator PWORKER_THREAD_ITER;
@@ -39,7 +50,8 @@ private:
 	typedef boost::container::vector <THRID_PAIR> THREAD_STATE_LIST;
 	THREAD_STATE_LIST m_runningThreadsMap;
 
-	SynchPolicy m_synchPolicy;
+	Synchable m_synchAble;
+	MonitorWorker m_threadsMonitor;
 };
 
 #endif /* THREAD_THREADMGR_HPP_ */
