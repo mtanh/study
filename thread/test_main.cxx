@@ -29,21 +29,18 @@
 
 #include "WriteWorker.hpp"
 
-struct animal: public boost::intrusive::list_base_hook<>
-{
+struct animal: public boost::intrusive::list_base_hook<> {
 	std::string name;
 	int legs;
-	animal(std::string n, int l)
-	: name { boost::move (n) }
-	, legs { l } {
+	animal(std::string n, int l) :
+			name { boost::move(n) }, legs { l } {
 	}
 };
 
 typedef boost::intrusive::list<animal> animal_list;
 static animal_list animals;
 
-static void f1()
-{
+static void f1() {
 	animal a1 { "cat", 4 };
 	animal a2 { "shark", 0 };
 	animal a3 { "spider", 8 };
@@ -53,58 +50,56 @@ static void f1()
 	animals.push_back(a3);
 }
 
-int main (int argc, char *argv[])
-{
-	boost::ptr_vector <WorkerThread> threadGroup;
-	threadGroup.push_back (new WriteWorker ());
-	threadGroup.push_back (new WriteWorker ());
+int main(int argc, char *argv[]) {
+	boost::ptr_vector<WorkerThread> threadGroup;
+	threadGroup.push_back(new WriteWorker());
+	threadGroup.push_back(new WriteWorker());
 
-	boost::this_thread::sleep_for (boost::chrono::milliseconds (1000));
-	boost::ptr_vector <WorkerThread>::iterator iter = threadGroup.begin();
-	for (; iter != threadGroup.end(); ++iter)
-	{
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	boost::ptr_vector<WorkerThread>::iterator iter = threadGroup.begin();
+	for (; iter != threadGroup.end(); ++iter) {
 		(*iter).Stop();
 	}
 
 	//boost::scoped_thread<boost::interrupt_and_join_if_joinable> th (boost::ref (f1));
 
 	/*
-	funcntor1 f1;
-	boost::thread_attributes atts;
-	atts.set_stack_size(4096*10);
+	 funcntor1 f1;
+	 boost::thread_attributes atts;
+	 atts.set_stack_size(4096*10);
 
-	boost::thread th;
-	try
-	{
-		boost::thread tmp (atts, boost::ref (f1));
-		th.swap (tmp);
+	 boost::thread th;
+	 try
+	 {
+	 boost::thread tmp (atts, boost::ref (f1));
+	 th.swap (tmp);
 
-		if (th.joinable())
-		{
-			main_thread = pthread_self();
-			th.join();
-		}
+	 if (th.joinable())
+	 {
+	 main_thread = pthread_self();
+	 th.join();
+	 }
 
-		//boost::this_thread::sleep (boost::posix_time::seconds (2));
-		//th.interrupt();
-	}
-	catch (boost::thread_interrupted& e)
-	{
-		puts ("In catch");
+	 //boost::this_thread::sleep (boost::posix_time::seconds (2));
+	 //th.interrupt();
+	 }
+	 catch (boost::thread_interrupted& e)
+	 {
+	 puts ("In catch");
 
-		if (th.joinable())
-		{
-			puts ("Joined");
-			main_thread = pthread_self();
-			th.join();
-		}
-	}
+	 if (th.joinable())
+	 {
+	 puts ("Joined");
+	 main_thread = pthread_self();
+	 th.join();
+	 }
+	 }
 
-	//boost::thread::native_handle_type type = th.native_handle();
+	 //boost::thread::native_handle_type type = th.native_handle();
 
-	//assert (!pthread_equal (child_thread, main_thread));
-	puts ("Done");
-	*/
+	 //assert (!pthread_equal (child_thread, main_thread));
+	 puts ("Done");
+	 */
 
 	return (EXIT_SUCCESS);
 }

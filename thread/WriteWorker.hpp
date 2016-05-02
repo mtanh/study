@@ -10,14 +10,13 @@
 
 #include "WorkerThread.hpp"
 
-class WriteWorker: public WorkerThread
-{
+class WriteWorker: public WorkerThread {
 public:
-	WriteWorker ();
-	virtual ~WriteWorker ();
+	WriteWorker();
+	virtual ~WriteWorker();
 
 private:
-	void PrivateThreadProc (void);
+	void PrivateThreadProc(void);
 };
 
 #endif /* THREAD_WRITEWORKER_HPP_ */
