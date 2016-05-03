@@ -33,7 +33,7 @@ class WorkerThread: boost::noncopyable {
 	typedef void (WorkerThread::*THREAD_PROC)(void);
 
 public:
-	explicit WorkerThread(bool autoStart = true);
+	explicit WorkerThread(ThreadPriority thrPriority = THREAD_PRIORITY_NORMAL, bool autoStart = true);
 	virtual ~WorkerThread();
 
 	inline bool Running() const {

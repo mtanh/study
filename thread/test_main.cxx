@@ -26,6 +26,7 @@
 #include <boost/container/list.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/type.hpp>
 
 #include "WriteWorker.hpp"
 
@@ -51,6 +52,37 @@ static void f1() {
 }
 
 int main(int argc, char *argv[]) {
+
+	WriteWorker a;
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+	(void)a.Start();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+	(void)a.Start();
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+	(void)a.Start();
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+	(void)a.Start();
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+
+	(void)a.Start();
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        a.Stop();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	/*
 	boost::ptr_vector<WorkerThread> threadGroup;
 	threadGroup.push_back(new WriteWorker());
 	threadGroup.push_back(new WriteWorker());
@@ -60,6 +92,7 @@ int main(int argc, char *argv[]) {
 	for (; iter != threadGroup.end(); ++iter) {
 		(*iter).Stop();
 	}
+	*/
 
 	//boost::scoped_thread<boost::interrupt_and_join_if_joinable> th (boost::ref (f1));
 
