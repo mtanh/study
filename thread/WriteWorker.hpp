@@ -10,6 +10,30 @@
 
 #include "WorkerThread.hpp"
 
+typedef struct Writeable: public CallableBase
+{
+	Writeable()
+	: CallableBase() {}
+
+	Writeable(void* arg)
+	: CallableBase(arg) {}
+
+	~Writeable() {}
+
+	void operator()()
+	{
+		WorkerThread* pWorker = (WorkerThread*)m_arg;
+		if(m_arg != nullptr)
+		{
+			while (pWorker->Running()) {
+				std::cout << boost::this_thread::get_id() << ": "
+						<< ThreadStateStr[(int) pWorker->GetThreadState()] << "\n";
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+			}
+		}
+	}
+};
+
 class WriteWorker: public WorkerThread {
 public:
 	WriteWorker();

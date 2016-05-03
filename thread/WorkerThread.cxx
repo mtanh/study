@@ -9,9 +9,12 @@
 
 #include "../common/defines.hpp"
 
-WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart) :
-		m_threadState(THREAD_STATE_STOPPED), m_threadPriority(thrPriority), m_threadProc(
-				nullptr) {
+WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart)
+: m_threadState(THREAD_STATE_STOPPED)
+, m_threadPriority(thrPriority)
+, m_threadProc(nullptr)
+, m_callableObj(nullptr) {
+
 	if (autoStart) {
 		if (!Start()) {
 			fprintf(stderr, "WorkerThread ctor failed\n");

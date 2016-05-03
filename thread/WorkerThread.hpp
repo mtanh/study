@@ -29,6 +29,16 @@ enum ThreadPriority {
 
 static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
 
+typedef struct CallableBase
+{
+	void* m_arg;
+	virtual void operator()() = 0;
+
+	CallableBase(): m_arg(nullptr) {}
+	CallableBase(void* arg): m_arg(arg) {}
+	virtual ~CallableBase () {}
+} CallableBase, *pCallableBase;
+
 class WorkerThread: boost::noncopyable {
 	typedef void (WorkerThread::*THREAD_PROC)(void);
 
@@ -46,6 +56,7 @@ public:
 		return (m_threadState == THREAD_STATE_STOPPED);
 	}
 
+	void SetCallableObj(pCallableBase pCallable) { if(pCallable != nullptr) { m_callableObj = pCallable; } }
 	bool Start();
 	void Detach();
 	void Stop();
@@ -61,6 +72,7 @@ protected:
 	b_thread m_bThread;
 	volatile ThreadState m_threadState;
 	ThreadPriority m_threadPriority;
+	pCallableBase m_callableObj;
 
 private:
 	virtual void PrivateThreadProc(void) = 0;

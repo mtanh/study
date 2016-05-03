@@ -54,34 +54,38 @@ static void f1() {
 int main(int argc, char *argv[]) {
 
 	WriteWorker a;
+	Writeable wa;
+	a.SetCallableObj(&wa);
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 
-	(void)a.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 
-	(void)a.Start();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-
-	(void)a.Start();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-
-	(void)a.Start();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-
-	(void)a.Start();
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-        a.Stop();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//
+//	(void)a.Start();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+//	a.Stop();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//
+//	(void)a.Start();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+//	a.Stop();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//
+//	(void)a.Start();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+//	a.Stop();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//
+//	(void)a.Start();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+//	a.Stop();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+//
+//	(void)a.Start();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+//	a.Stop();
+//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 	/*
 	boost::ptr_vector<WorkerThread> threadGroup;
 	threadGroup.push_back(new WriteWorker());
