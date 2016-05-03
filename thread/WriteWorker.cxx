@@ -5,6 +5,7 @@
  *      Author: anhmt
  */
 
+#include "../common/defines.hpp"
 #include "WriteWorker.hpp"
 
 #include <iostream>
@@ -25,6 +26,7 @@ void WriteWorker::PrivateThreadProc() {
 //	}
 	if (m_callableObj != nullptr)
 	{
-		m_callableObj->operator()();
+		WHICHFUNC;
+		(*m_callableObj)();
 	}
 }

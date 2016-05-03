@@ -54,7 +54,7 @@ static void f1() {
 int main(int argc, char *argv[]) {
 
 	WriteWorker a;
-	Writeable wa;
+	Writeable wa(&a);
 	a.SetCallableObj(&wa);
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	a.Stop();
