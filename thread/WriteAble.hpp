@@ -9,7 +9,7 @@
 #define THREAD_WRITEABLE_HPP_
 
 #include "../common/defines.hpp"
-#include "TaskMgr.hpp"
+#include "TaskPool.hpp"
 #include "WorkerThread.hpp"
 
 typedef unsigned char BYTE;
@@ -28,11 +28,11 @@ public:
 
 	void operator()()
 	{
-		TaskMgr<CallableBase>* pThrMgr = nullptr;
-		pThrMgr = (TaskMgr<CallableBase>*)m_arg;
-		if(pThrMgr != nullptr)
+		TaskPool<CallableBase>* pTaskPool = nullptr;
+		pTaskPool = (TaskPool<CallableBase>*)m_arg;
+		if(pTaskPool != nullptr)
 		{
-			while (!pThrMgr->Stopped()) {
+			while (!pTaskPool->Stopped()) {
 //				std::cout << boost::this_thread::get_id() << ": "
 //						<< ThreadStateStr[(int)pWorker->GetThreadState()] << "\n";
 				puts ("Wait data ... Write to ...");

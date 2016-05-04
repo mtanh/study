@@ -31,7 +31,7 @@
 //#include "WriteWorker.hpp"
 #include "WorkerThread.hpp"
 #include "WriteAble.hpp"
-#include "TaskMgr.hpp"
+#include "TaskPool.hpp"
 
 struct animal: public boost::intrusive::list_base_hook<> {
 	std::string name;
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 	a.Stop();
 	*/
 
-	TaskMgr<CallableBase> gThrMgr;
+	TaskPool<CallableBase> gThrMgr;
 	gThrMgr.Start();
 
 	WorkerThread w;

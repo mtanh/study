@@ -5,8 +5,8 @@
  *      Author: anh.ma
  */
 
-#ifndef THREAD_TASKMGR_HPP_
-#define THREAD_TASKMGR_HPP_
+#ifndef THREAD_TASKPOOL_HPP_
+#define THREAD_TASKPOOL_HPP_
 
 #include <boost/container/vector.hpp>
 #include <boost/ptr_container/ptr_deque.hpp>
@@ -21,7 +21,7 @@ typedef boost::thread::id BThreadId;
 	fprintf(stderr, "\n");
 
 template<typename CallableTask>
-class TaskMgr: public boost::noncopyable {
+class TaskPool: public boost::noncopyable {
 
 	typedef struct Synchable {
 		boost::timed_mutex mtx;
@@ -29,8 +29,8 @@ class TaskMgr: public boost::noncopyable {
 	} Synchable;
 
 public:
-	TaskMgr();
-	~TaskMgr();
+	TaskPool();
+	~TaskPool();
 
 	bool Init(unsigned int maxThreadNum = (unsigned int)boost::thread::hardware_concurrency());
 	void Start();
@@ -60,7 +60,7 @@ private:
 };
 
 template<typename CallableTask>
-TaskMgr<CallableTask>::TaskMgr()
+TaskPool<CallableTask>::TaskPool()
 : m_maxThreads((unsigned int)boost::thread::hardware_concurrency())
 , m_isStopped(true)
 , m_numRunningThreads(0)
@@ -68,7 +68,7 @@ TaskMgr<CallableTask>::TaskMgr()
 }
 
 template<typename CallableTask>
-bool TaskMgr<CallableTask>::Init(unsigned int maxThreadNum) {
+bool TaskPool<CallableTask>::Init(unsigned int maxThreadNum) {
 
 	bool ret = true;
 	do {
@@ -88,11 +88,11 @@ bool TaskMgr<CallableTask>::Init(unsigned int maxThreadNum) {
 }
 
 template<typename CallableTask>
-TaskMgr<CallableTask>::~TaskMgr() {
+TaskPool<CallableTask>::~TaskPool() {
 }
 
 template<typename CallableTask>
-inline void TaskMgr<CallableTask>::Start() {
+inline void TaskPool<CallableTask>::Start() {
 
 	if(m_isStopped)
 	{
@@ -101,12 +101,12 @@ inline void TaskMgr<CallableTask>::Start() {
 }
 
 template<typename CallableTask>
-void TaskMgr<CallableTask>::Stop() {
+void TaskPool<CallableTask>::Stop() {
 
 }
 
 template<typename CallableTask>
-void TaskMgr<CallableTask>::Run(CallableTask* task) {
+void TaskPool<CallableTask>::Run(CallableTask* task) {
 }
 
-#endif /* THREAD_TASKMGR_HPP_ */
+#endif /* THREAD_TASKPOOL_HPP_ */
