@@ -53,12 +53,20 @@ static void f1() {
 
 int main(int argc, char *argv[]) {
 
-	WriteWorker a;
-	Writeable wa(&a);
-	a.SetCallableObj(&wa);
+	WriteWorker<Writeable> a;
+	a.Init(1024);
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	a.Stop();
 
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+	a.Start();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	a.Stop();
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+	a.Start();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	a.Stop();
 
 //	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 //

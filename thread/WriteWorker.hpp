@@ -8,7 +8,10 @@
 #ifndef THREAD_WRITEWORKER_HPP_
 #define THREAD_WRITEWORKER_HPP_
 
+#include "../common/defines.hpp"
 #include "WorkerThread.hpp"
+
+typedef unsigned char Byte;
 
 typedef struct Writeable: public CallableBase
 {
@@ -22,8 +25,9 @@ typedef struct Writeable: public CallableBase
 
 	void operator()()
 	{
-		WorkerThread* pWorker = (WorkerThread*)m_arg;
-		if(m_arg != nullptr)
+		WorkerThread* pWorker = nullptr;
+		pWorker = (WorkerThread*)m_arg;
+		if(pWorker != nullptr)
 		{
 			while (pWorker->Running()) {
 				std::cout << boost::this_thread::get_id() << ": "
@@ -34,32 +38,56 @@ typedef struct Writeable: public CallableBase
 	}
 };
 
-template <typename Callable>
+template <typename CallableType>
 class WriteWorker: public WorkerThread {
 public:
 	WriteWorker();
 	virtual ~WriteWorker();
 
+	void Init(unsigned int bufSize);
+
 private:
 	void PrivateThreadProc(void);
-	Callable m_callable;
+	Byte* m_privateBuff;
 };
 
-template<typename Callable>
-inline WriteWorker<Callable>::WriteWorker()
-: WorkerThread() {
+template<typename CallableType>
+inline WriteWorker<CallableType>::WriteWorker()
+: WorkerThread()
+, m_privateBuff(nullptr) {
 }
 
-template<typename Callable>
-inline WriteWorker<Callable>::~WriteWorker() {
+template<typename CallableType>
+inline WriteWorker<CallableType>::~WriteWorker() {
+
+	if(m_pCallable != nullptr) {
+		delete m_pCallable;
+		m_pCallable = nullptr;
+	}
+
+	if(m_privateBuff != nullptr) {
+		delete[] m_privateBuff;
+		m_privateBuff = nullptr;
+	}
 }
 
-template<typename Callable>
-inline void WriteWorker<Callable>::PrivateThreadProc(void) {
+template<typename CallableType>
+inline void WriteWorker<CallableType>::Init(unsigned int bufSize) {
 
-	while(Running())
-	{
+	if(nullptr == m_pCallable) {
+		m_pCallable = new CallableType(this);
+	}
 
+	if(nullptr == m_privateBuff) {
+		m_privateBuff = new Byte[bufSize];
+	}
+}
+
+template<typename CallableType>
+inline void WriteWorker<CallableType>::PrivateThreadProc(void) {
+
+	if(m_pCallable != nullptr) {
+		(*m_pCallable)();
 	}
 }
 

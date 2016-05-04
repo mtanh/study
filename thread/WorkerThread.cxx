@@ -13,7 +13,7 @@ WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart)
 : m_threadState(THREAD_STATE_STOPPED)
 , m_threadPriority(thrPriority)
 , m_threadProc(nullptr)
-, m_callableObj(nullptr) {
+, m_pCallable(nullptr) {
 
 	if (autoStart) {
 		if (!Start()) {
