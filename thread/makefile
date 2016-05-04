@@ -31,7 +31,7 @@ _DEPS =
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 #_OBJ = $(CURRENTDIR).o
-_OBJ = test_main.o WorkerThread.o WriteWorker.o
+_OBJ = test_main.o WorkerThread.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

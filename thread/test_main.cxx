@@ -28,7 +28,10 @@
 #include <boost/thread/locks.hpp>
 #include <boost/type.hpp>
 
-#include "WriteWorker.hpp"
+//#include "WriteWorker.hpp"
+#include "WorkerThread.hpp"
+#include "WriteAble.hpp"
+#include "TaskMgr.hpp"
 
 struct animal: public boost::intrusive::list_base_hook<> {
 	std::string name;
@@ -38,6 +41,7 @@ struct animal: public boost::intrusive::list_base_hook<> {
 	}
 };
 
+/*
 typedef boost::intrusive::list<animal> animal_list;
 static animal_list animals;
 
@@ -50,11 +54,13 @@ static void f1() {
 	animals.push_back(a2);
 	animals.push_back(a3);
 }
+*/
 
 int main(int argc, char *argv[]) {
 
+	/*
 	WriteWorker<Writeable> a;
-	a.Init(1024);
+	a.Init();
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	a.Stop();
 
@@ -62,11 +68,18 @@ int main(int argc, char *argv[]) {
 	a.Start();
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 	a.Stop();
+	*/
 
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-	a.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-	a.Stop();
+	TaskMgr<CallableBase> gThrMgr;
+	gThrMgr.Start();
+
+	WorkerThread w;
+	Writeable* wa = new Writeable();
+	wa->SetArg(&gThrMgr);
+	w.SetCallableObj(wa);
+	w.Start();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	w.Stop();
 
 //	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 //

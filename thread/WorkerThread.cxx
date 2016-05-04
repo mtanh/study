@@ -23,9 +23,15 @@ WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart)
 }
 
 WorkerThread::~WorkerThread() {
+
+	if(m_pCallable != nullptr) {
+		delete m_pCallable;
+		m_pCallable = nullptr;
+	}
 }
 
 bool WorkerThread::Start() {
+
 	do {
 		if (Running()) {
 			break;
@@ -33,7 +39,7 @@ bool WorkerThread::Start() {
 
 		m_threadState = THREAD_STATE_RUNNING;
 		m_threadProc = &WorkerThread::ThreadProc;
-		// Thread Attributions ???
+		/* thread attributions here */
 		boost::thread tmp = boost::thread(m_threadProc, this);
 		m_bThread.swap(tmp);
 
@@ -43,12 +49,14 @@ bool WorkerThread::Start() {
 }
 
 void WorkerThread::Detach() {
+
 	if (Running()) {
 		m_bThread.detach();
 	}
 }
 
 void WorkerThread::Stop() {
+
 	if (Running()) {
 		m_threadState = THREAD_STATE_STOPPED;
 	}
@@ -61,10 +69,19 @@ void WorkerThread::Stop() {
 }
 
 void WorkerThread::ChangeThreadPriority(ThreadPriority p) {
+
 	m_threadPriority = p;
 }
 
+void WorkerThread::PrivateThreadProc(void) {
+
+	if(m_pCallable != nullptr) {
+		(*m_pCallable)();
+	}
+}
+
 void WorkerThread::ThreadProc() {
+
 	try {
 		PrivateThreadProc();
 	} catch (boost::thread_interrupted& ei) {

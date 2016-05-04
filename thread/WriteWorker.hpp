@@ -11,7 +11,8 @@
 #include "../common/defines.hpp"
 #include "WorkerThread.hpp"
 
-typedef unsigned char Byte;
+typedef unsigned char BYTE;
+#define MAX_BUFSZ 1024
 
 typedef struct Writeable: public CallableBase
 {
@@ -38,27 +39,29 @@ typedef struct Writeable: public CallableBase
 	}
 };
 
-template <typename CallableType>
+template <typename CallableType, typename WritePolicy>
 class WriteWorker: public WorkerThread {
 public:
 	WriteWorker();
 	virtual ~WriteWorker();
 
-	void Init(unsigned int bufSize);
+	void Init(unsigned int bufSize = MAX_BUFSZ, const WritePolicy& writePolicy);
 
 private:
 	void PrivateThreadProc(void);
-	Byte* m_privateBuff;
+	BYTE* m_privateBuff;
+	WritePolicy* m_writePolicy;
 };
 
-template<typename CallableType>
-inline WriteWorker<CallableType>::WriteWorker()
+template <typename CallableType, typename WritePolicy>
+WriteWorker<CallableType, WritePolicy>::WriteWorker()
 : WorkerThread()
-, m_privateBuff(nullptr) {
+, m_privateBuff(nullptr)
+, m_writePolicy(nullptr) {
 }
 
-template<typename CallableType>
-inline WriteWorker<CallableType>::~WriteWorker() {
+template <typename CallableType, typename WritePolicy>
+WriteWorker<CallableType, WritePolicy>::~WriteWorker() {
 
 	if(m_pCallable != nullptr) {
 		delete m_pCallable;
@@ -71,20 +74,24 @@ inline WriteWorker<CallableType>::~WriteWorker() {
 	}
 }
 
-template<typename CallableType>
-inline void WriteWorker<CallableType>::Init(unsigned int bufSize) {
+template <typename CallableType, typename WritePolicy>
+void WriteWorker<CallableType, WritePolicy>::Init(unsigned int bufSize, const WritePolicy& writePolicy) {
 
 	if(nullptr == m_pCallable) {
 		m_pCallable = new CallableType(this);
 	}
 
 	if(nullptr == m_privateBuff) {
-		m_privateBuff = new Byte[bufSize];
+		m_privateBuff = new BYTE[bufSize];
+	}
+
+	if(writePolicy != nullptr) {
+		m_writePolicy = writePolicy;
 	}
 }
 
-template<typename CallableType>
-inline void WriteWorker<CallableType>::PrivateThreadProc(void) {
+template <typename CallableType, typename WritePolicy>
+void WriteWorker<CallableType, WritePolicy>::PrivateThreadProc(void) {
 
 	if(m_pCallable != nullptr) {
 		(*m_pCallable)();
