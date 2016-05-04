@@ -30,8 +30,9 @@
 
 //#include "WriteWorker.hpp"
 #include "WorkerThread.hpp"
-#include "WriteAble.hpp"
 #include "TaskPool.hpp"
+
+TaskPool gTaskPool;
 
 struct animal: public boost::intrusive::list_base_hook<> {
 	std::string name;
@@ -58,6 +59,7 @@ static void f1() {
 
 int main(int argc, char *argv[]) {
 
+	gTaskPool.Start();
 	/*
 	WriteWorker<Writeable> a;
 	a.Init();
@@ -70,6 +72,7 @@ int main(int argc, char *argv[]) {
 	a.Stop();
 	*/
 
+	/*
 	TaskPool<CallableBase> gThrMgr;
 	gThrMgr.Start();
 
@@ -80,6 +83,24 @@ int main(int argc, char *argv[]) {
 	w.Start();
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	w.Stop();
+	*/
+
+	/*
+	WorkerThread w;
+	w.Start();
+	std::cout << w.GetThreadId() << "\n";
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	w.Stop();
+	std::cout << w.GetThreadId() << "\n";
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	w.Start();
+	std::cout << w.GetThreadId() << "\n";
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	w.Stop();
+	std::cout << w.GetThreadId() << "\n";
+	*/
 
 //	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 //

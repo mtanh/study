@@ -13,31 +13,62 @@
 #include <boost/fusion/include/pair.hpp>
 #include <boost/variant.hpp>
 #include <limits.h>
+
+#include "../common/defines.hpp"
 #include "WorkerThread.hpp"
 
-typedef boost::thread::id BThreadId;
 #define ERROR(str) \
 	fprintf(stderr, (str)); \
 	fprintf(stderr, "\n");
 
-template<typename CallableTask>
+//class TaskPool<CallableBase, WorkerThread>;
+
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
 class TaskPool: public boost::noncopyable {
+
+	typedef boost::ptr_deque</*CallableTask*/CallableBase> PTASK_LIST;
+	typedef typename PTASK_LIST::iterator PTASK_ITER;
+	typedef boost::fusion::pair<BThreadId, ThreadState> THRID_PAIR;
+	typedef boost::container::vector<THRID_PAIR> THREAD_STATE_MAP;
 
 	typedef struct Synchable {
 		boost::timed_mutex mtx;
 		boost::condition_variable cond_val;
 	} Synchable;
 
+	class WorkerTask: public CallableBase {
+
+		public:
+			WorkerTask(): CallableBase() {}
+			WorkerTask(void* arg): CallableBase(arg) {}
+			virtual ~WorkerTask() {}
+
+			virtual void operator()() {
+				TaskPool* pTaskPool = (TaskPool*) m_arg;
+				if (pTaskPool != nullptr) {
+					while (!pTaskPool->m_isStopped) {
+						puts("Monitoring task queue and pop task ....");
+					}
+				}
+			}
+		};
+
 public:
 	TaskPool();
 	~TaskPool();
 
-	bool Init(unsigned int maxThreadNum = (unsigned int)boost::thread::hardware_concurrency());
+	bool Init(unsigned int maxThreadNum =
+			(unsigned int) boost::thread::hardware_concurrency());
 	void Start();
 	void Stop();
-	void Run(CallableTask* task);
+	void Run(/*CallableTask**/CallableBase* task);
+	inline bool Stopped() const {
+		return m_isStopped;
+	}
 
-	inline bool Stopped() const { return m_isStopped; }
+	void TaskEnQueue(/*CallableTask**/CallableBase* task);
+	/*CallableTask**/CallableBase* TaskDeQueue();
 
 private:
 	void StartWorkerThread();
@@ -48,65 +79,84 @@ private:
 	bool m_isStopped;
 	bool m_isInitialized;
 
-	typedef boost::ptr_deque<WorkerThread> PWORKER_THREAD_LIST;
-	typedef PWORKER_THREAD_LIST::iterator PWORKER_THREAD_ITER;
-	PWORKER_THREAD_LIST m_RunnableQueue;
-
-	typedef boost::fusion::pair<boost::thread::id, ThreadState> THRID_PAIR;
-	typedef boost::container::vector<THRID_PAIR> THREAD_STATE_LIST;
-	THREAD_STATE_LIST m_runningThreadsMap;
-
+	PTASK_LIST m_TaskQueue;
+	THREAD_STATE_MAP m_runningThreadsMap;
 	Synchable m_synchAble;
 };
 
-template<typename CallableTask>
-TaskPool<CallableTask>::TaskPool()
-: m_maxThreads((unsigned int)boost::thread::hardware_concurrency())
-, m_isStopped(true)
-, m_numRunningThreads(0)
-, m_isInitialized(false) {
+extern TaskPool gTaskPool;
+
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+TaskPool::TaskPool() :
+		m_maxThreads((unsigned int) boost::thread::hardware_concurrency()), m_isStopped(
+				true), m_numRunningThreads(0), m_isInitialized(false) {
 }
 
-template<typename CallableTask>
-bool TaskPool<CallableTask>::Init(unsigned int maxThreadNum) {
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+bool TaskPool::Init(unsigned int maxThreadNum) {
 
 	bool ret = true;
 	do {
-
-		if(maxThreadNum <= 0 || maxThreadNum >= UINT_MAX)
-		{
+		if (maxThreadNum <= 0 || maxThreadNum >= UINT_MAX) {
 			ret = false;
 			break;
 		}
-
 		m_maxThreads = maxThreadNum;
-
-	} while(false);
+	} while (false);
 
 	m_isInitialized = ret;
 	return m_isInitialized;
 }
 
-template<typename CallableTask>
-TaskPool<CallableTask>::~TaskPool() {
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+TaskPool::~TaskPool() {
+
 }
 
-template<typename CallableTask>
-inline void TaskPool<CallableTask>::Start() {
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+inline void TaskPool::Start() {
 
-	if(m_isStopped)
-	{
-		m_isStopped = false;
+	if (m_isStopped) {
+		m_isStopped = false; // start or restart task pool
+		WHICHFUNC
+
+		WorkerThread thr(THREAD_PRIORITY_ABOVE_NORMAL, false /*auto-run*/);
+		//CallableTask* wt = new WorkerTask((void*) this);
+		thr.SetCallableObj(new WorkerTask(this));
+		thr.Start();
+
+		std::cout << "Thread ID: " << thr.GetThreadId() << "\n";
 	}
 }
 
-template<typename CallableTask>
-void TaskPool<CallableTask>::Stop() {
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+void TaskPool::Stop() {
 
 }
 
-template<typename CallableTask>
-void TaskPool<CallableTask>::Run(CallableTask* task) {
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+void TaskPool::Run(/*CallableTask**/CallableBase* task) {
+}
+
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+inline void TaskPool::TaskEnQueue(/*CallableTask**/CallableBase* task) {
+}
+
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+inline /*CallableTask**/CallableBase* TaskPool::TaskDeQueue() {
+}
+
+/*template<typename CallableTask = CallableBase,
+		typename ThreadPolicy = WorkerThread>*/
+inline void TaskPool::StartWorkerThread() {
 }
 
 #endif /* THREAD_TASKPOOL_HPP_ */

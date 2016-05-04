@@ -11,7 +11,9 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread.hpp>
 
-typedef boost::thread b_thread;
+typedef boost::thread BThread;
+typedef BThread::id BThreadId;
+
 enum ThreadState {
 	THREAD_STATE_STOPPED = 0,
 	THREAD_STATE_PENDING /* Ready to stop */,
@@ -29,7 +31,7 @@ enum ThreadPriority {
 
 static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
 
-/*typedef struct*/ class CallableBase: public boost::noncopyable
+/*typedef struct*/class CallableBase: public boost::noncopyable
 {
 public:
 	CallableBase(): m_arg(nullptr) {}
@@ -61,6 +63,7 @@ public:
 	}
 
 	inline void SetCallableObj(CallableBase* pCallable) { if(pCallable != nullptr) { m_pCallable = pCallable; } }
+	inline BThreadId GetThreadId() const { return boost::this_thread::get_id(); }
 	bool Start();
 	void Detach();
 	void Stop();
@@ -73,7 +76,7 @@ protected:
 	void ThreadProc(void);
 
 protected:
-	b_thread m_bThread;
+	BThread m_bThread;
 	volatile ThreadState m_threadState;
 	ThreadPriority m_threadPriority;
 	/*pCallableBase*/CallableBase* m_pCallable;
