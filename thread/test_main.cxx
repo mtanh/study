@@ -60,6 +60,7 @@ static void f1() {
 int main(int argc, char *argv[]) {
 
 	gTaskPool.Start();
+
 	/*
 	WriteWorker<Writeable> a;
 	a.Init();
