@@ -61,6 +61,8 @@ int main(int argc, char *argv[]) {
 
 	gTaskPool.Start();
 
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(100000));
+
 	/*
 	WriteWorker<Writeable> a;
 	a.Init();

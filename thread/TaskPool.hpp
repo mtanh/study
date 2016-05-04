@@ -13,6 +13,7 @@
 #include <boost/fusion/include/pair.hpp>
 #include <limits.h>
 #include <vector>
+#include <algorithm>
 
 #include "../common/defines.hpp"
 #include "WorkerThread.hpp"
@@ -50,7 +51,7 @@ class TaskPool: public boost::noncopyable {
 				const THR_STATE_PAIR::second_type& state2) const {
 			return (state1 < state2);
 		}
-	};
+	} ThreadStateCompare;
 
 	typedef struct Synchable {
 		boost::timed_mutex mtx;
@@ -95,8 +96,7 @@ public:
 	}
 
 	void TaskEnQueue(/*CallableTask**/CallableBase* task);
-	/*CallableTask**/
-	CallableBase* TaskDeQueue();
+	/*CallableTask**/CallableBase* TaskDeQueue();
 
 private:
 	void StartThread();
@@ -192,7 +192,7 @@ inline void TaskPool::StartThread() {
 	THR_STATE_PAIR thr_state_pair = std::make_pair(thr.GetThreadId(),
 			THREAD_STATE_RUNNING);
 	m_runningThreadsMap.push_back(thr_state_pair);
-	std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end());
+	std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(), ThreadStateCompare());
 }
 
 #endif /* THREAD_TASKPOOL_HPP_ */
