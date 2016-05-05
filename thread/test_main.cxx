@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 	*/
 
 	gTaskPool.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
 	gTaskPool.Stop();
 
 	/*

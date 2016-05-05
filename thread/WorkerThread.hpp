@@ -64,7 +64,7 @@ public:
 		return (m_threadState == THREAD_STATE_STOPPED);
 	}
 
-	inline void SetCallableObj(CallableBase* pCallable) { if(pCallable != nullptr) { m_pCallable = pCallable; } }
+	inline void SetCallable(CallableBase* pCallable) { if(pCallable != nullptr) { m_pCallable = pCallable; } }
 	inline BThreadId GetThreadId() const { return boost::this_thread::get_id(); }
 	bool Start();
 	void Detach();

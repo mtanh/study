@@ -25,9 +25,6 @@ WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart)
 WorkerThread::~WorkerThread() {
 
 	if(m_pCallable != nullptr) {
-
-		puts("HEREEEEEEEEEEEEEEEEE");
-
 		delete m_pCallable;
 		m_pCallable = nullptr;
 	}
