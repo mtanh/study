@@ -21,12 +21,15 @@
 #include <sys/mman.h>
 #include <iostream>
 #include <string>
+#include <list>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/type.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 //#include "WriteWorker.hpp"
 #include "WorkerThread.hpp"
@@ -57,11 +60,44 @@ static void f1() {
 }
 */
 
+static void f3() {
+	while(1) {
+		puts("AAA");
+	}
+}
+
+class abc {
+public:
+	abc() { puts("Ctor"); }
+	~abc() {
+
+		if(m_a) {
+			delete m_a;
+			puts("Dtor");
+		}
+	}
+
+	void f1(int* a) {
+		m_a = a;
+	}
+
+private:
+	int* m_a;
+};
+
 int main(int argc, char *argv[]) {
 
-	gTaskPool.Start();
+	/*
+	boost::shared_ptr<abc> pAbc(new abc());
+	pAbc->f1(new int(1));
 
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(100000));
+	std::vector<abc*> arr;
+	ar.push_back(pAbc.get());
+	*/
+
+	gTaskPool.Start();
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+	gTaskPool.Stop();
 
 	/*
 	WriteWorker<Writeable> a;

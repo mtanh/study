@@ -9,6 +9,7 @@
 #define THREAD_WORKERTHREAD_HPP_
 
 #include <boost/noncopyable.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
 
 typedef boost::thread BThread;
@@ -31,7 +32,7 @@ enum ThreadPriority {
 
 static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
 
-/*typedef struct*/class CallableBase: public boost::noncopyable
+class CallableBase: public boost::noncopyable
 {
 public:
 	CallableBase(): m_arg(nullptr) {}
@@ -43,9 +44,10 @@ public:
 
 protected:
 	void* m_arg;
-} /*CallableBase, *pCallableBase*/;
+};
 
-class WorkerThread: boost::noncopyable {
+class WorkerThread: public boost::noncopyable {
+
 	typedef void (WorkerThread::*THREAD_PROC)(void);
 
 public:
@@ -68,9 +70,7 @@ public:
 	void Detach();
 	void Stop();
 	void ChangeThreadPriority(ThreadPriority p);
-	const ThreadState GetThreadState() const {
-		return m_threadState;
-	}
+	const ThreadState GetThreadState() const { return m_threadState; }
 
 protected:
 	void ThreadProc(void);
@@ -79,7 +79,7 @@ protected:
 	BThread m_bThread;
 	volatile ThreadState m_threadState;
 	ThreadPriority m_threadPriority;
-	/*pCallableBase*/CallableBase* m_pCallable;
+	CallableBase* m_pCallable;
 
 private:
 	virtual void PrivateThreadProc(void) /*= 0*/;

@@ -22,36 +22,39 @@
 	fprintf(stderr, (str)); \
 	fprintf(stderr, "\n");
 
-//class TaskPool<CallableBase, WorkerThread>;
-
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
 class TaskPool: public boost::noncopyable {
 
-	typedef boost::ptr_deque</*CallableTask*/CallableBase> PTASK_LIST;
+	typedef boost::ptr_deque<CallableBase> PTASK_LIST;
 	typedef typename PTASK_LIST::iterator PTASK_ITER;
-	typedef std::pair<BThreadId, ThreadState> THR_STATE_PAIR;
-	typedef std::vector<THR_STATE_PAIR> THREAD_STATE_MAP;
+	//typedef std::pair<WorkerThread, ThreadState> THR_STATE_PAIR;
+	typedef std::vector<WorkerThread*> THREAD_LIST;
 
-	typedef struct ThreadStateCompare {
-		bool operator()(const THR_STATE_PAIR& pair1,
-				const THR_STATE_PAIR& pair2) {
-			return StateLess(pair1.second, pair2.second);
+	template<typename T>
+	class ThreadStateCompare {
+	public:
+		bool operator()(const T* const t1, const T* const t2) {
+			return StateLess(t1->get()->GetThreadState(), t2->get()->GetThreadState());
 		}
-		bool operator()(const THR_STATE_PAIR& pair,
-						const THR_STATE_PAIR::second_type& state) {
-			return StateLess(pair.second, state);
+		bool operator()(const T* const t, ThreadState state) {
+			return StateLess(t->get()->GetThreadState(), state);
 		}
-		bool operator()(const THR_STATE_PAIR::second_type& state,
-						const THR_STATE_PAIR& pair) {
-			return StateLess(state, pair.second);
+		bool operator()(ThreadState state, const T* const t) {
+			return StateLess(t->get()->GetThreadState(), state);
 		}
 	private:
-		bool StateLess(const THR_STATE_PAIR::second_type& state1,
-				const THR_STATE_PAIR::second_type& state2) const {
+		bool StateLess(ThreadState state1, ThreadState state2) const {
 			return (state1 < state2);
 		}
-	} ThreadStateCompare;
+	};
+
+	template<typename T>
+	class abc {
+
+	public:
+		bool operator()(T* t1, T* t2) {
+			return (t1->get()->GetThreadState() < t2->get()->GetThreadState());
+		}
+	};
 
 	typedef struct Synchable {
 		boost::timed_mutex mtx;
@@ -59,25 +62,31 @@ class TaskPool: public boost::noncopyable {
 	} Synchable;
 
 	class WorkerTask: public CallableBase {
-
 	public:
-		WorkerTask() :
-				CallableBase() {
-		}
-		WorkerTask(void* arg) :
-				CallableBase(arg) {
-		}
-		virtual ~WorkerTask() {
-		}
-
+		WorkerTask(): CallableBase() {}
+		WorkerTask(void* arg): CallableBase(arg) {}
+		virtual ~WorkerTask() { puts("~WT"); }
 		virtual void operator()() {
-			TaskPool* pTaskPool = (TaskPool*) m_arg;
-			if (pTaskPool != nullptr) {
-				while (!pTaskPool->m_isStopped) {
+			TaskPool* pTaskPool = (TaskPool*)m_arg;
+			if(pTaskPool != nullptr) {
+				while(!pTaskPool->m_isStopped) {
 					puts("Monitoring task queue and pop task ....");
-					boost::this_thread::sleep_for(
-							boost::chrono::milliseconds(10000));
+					boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 				}
+			}
+		}
+	};
+
+	class ThreadMonitorTask: public CallableBase {
+	public:
+		ThreadMonitorTask(): CallableBase() {}
+		ThreadMonitorTask(void* arg): CallableBase(arg) {}
+		virtual ~ThreadMonitorTask() {}
+		virtual void operator()() {
+			TaskPool* pTaskPool = (TaskPool*)m_arg;
+			if(!pTaskPool->m_isStopped) {
+				puts("Monitoring ....");
+				boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
 			}
 		}
 	};
@@ -86,17 +95,13 @@ public:
 	TaskPool();
 	~TaskPool();
 
-	bool Init(unsigned int maxThreadNum =
-			(unsigned int) boost::thread::hardware_concurrency());
+	bool Init(unsigned int maxThreadNum = (unsigned int) boost::thread::hardware_concurrency());
 	void Start();
 	void Stop();
-	void Run(/*CallableTask**/CallableBase* task);
-	inline bool Stopped() const {
-		return m_isStopped;
-	}
-
-	void TaskEnQueue(/*CallableTask**/CallableBase* task);
-	/*CallableTask**/CallableBase* TaskDeQueue();
+	void Run(CallableBase* task);
+	inline bool Stopped() const { return m_isStopped; }
+	void TaskEnQueue(CallableBase* task);
+	CallableBase* TaskDeQueue();
 
 private:
 	void StartThread();
@@ -108,21 +113,19 @@ private:
 	bool m_isInitialized;
 
 	PTASK_LIST m_TaskQueue;
-	THREAD_STATE_MAP m_runningThreadsMap;
+	THREAD_LIST m_runningThreadsMap;
+	BThread m_threadMonitoring;
 	Synchable m_synchAble;
 };
 
-extern TaskPool gTaskPool;
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
-TaskPool::TaskPool() :
-		m_maxThreads((unsigned int) boost::thread::hardware_concurrency()), m_isStopped(
-				true), m_numRunningThreads(0), m_isInitialized(false) {
+TaskPool::TaskPool()
+: m_maxThreads((unsigned int) boost::thread::hardware_concurrency())
+, m_isStopped(true)
+, m_numRunningThreads(0)
+, m_isInitialized(false) {
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
 bool TaskPool::Init(unsigned int maxThreadNum) {
 
 	bool ret = true;
@@ -138,61 +141,66 @@ bool TaskPool::Init(unsigned int maxThreadNum) {
 	return m_isInitialized;
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
 TaskPool::~TaskPool() {
 
+	puts("~TP");
+	THREAD_LIST::iterator it = m_runningThreadsMap.begin();
+	/*
+	for(; it != m_runningThreadsMap.end(); ++it) {
+		if((*it) != nullptr) {
+			delete (*it);
+			(*it) = nullptr;
+		}
+	}
+	*/
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
 inline void TaskPool::Start() {
 
 	if (m_isStopped) {
 		m_isStopped = false; // start or restart task pool
-		WHICHFUNC
-
 		StartThread();
 	}
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
 void TaskPool::Stop() {
 
+	m_isStopped = true;
+	THREAD_LIST::iterator it = m_runningThreadsMap.begin();
+	for(; it != m_runningThreadsMap.end(); ++it) {
+		(*it)->Stop();
+	}
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
-void TaskPool::Run(/*CallableTask**/CallableBase* task) {
+void TaskPool::Run(CallableBase* task) {
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
-inline void TaskPool::TaskEnQueue(/*CallableTask**/CallableBase* task) {
+void TaskPool::TaskEnQueue(CallableBase* task) {
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
-inline/*CallableTask**/CallableBase* TaskPool::TaskDeQueue() {
+CallableBase* TaskPool::TaskDeQueue() {
 
 	return nullptr;
 }
 
-/*template<typename CallableTask = CallableBase,
- typename ThreadPolicy = WorkerThread>*/
-inline void TaskPool::StartThread() {
+void TaskPool::StartThread() {
 
-	WorkerThread thr(THREAD_PRIORITY_ABOVE_NORMAL, /*auto-run=*/false);
-	thr.SetCallableObj(new WorkerTask(this));
-	std::cout << "Thread ID: " << thr.GetThreadId() << "\n";
-	thr.Start();
-	std::cout << "Thread ID: " << thr.GetThreadId() << "\n";
+	// protect the whole transaction utilize lock_guard
+	boost::lock_guard<boost::timed_mutex> guard(m_synchAble.mtx);
+	//WorkerThread* thr = new WorkerThread(THREAD_PRIORITY_ABOVE_NORMAL, /*auto-run=*/false);
+	boost::shared_ptr<WorkerThread> thr(new WorkerThread(THREAD_PRIORITY_ABOVE_NORMAL, /*auto-run=*/false));
+	boost::shared_ptr<WorkerTask> w(new WorkerTask(this));
+	thr->SetCallableObj(w.get());
 
-	THR_STATE_PAIR thr_state_pair = std::make_pair(thr.GetThreadId(),
-			THREAD_STATE_RUNNING);
-	m_runningThreadsMap.push_back(thr_state_pair);
-	std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(), ThreadStateCompare());
+	if(thr->Start()) {
+		std::cout << "[Started] Thread ID= " << thr->GetThreadId() << "\n";
+		m_runningThreadsMap.push_back(thr.get());
+		/*std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(),
+				abc<boost::shared_ptr<WorkerThread> >());*/
+		m_numRunningThreads++;
+	}
 }
+
+extern TaskPool gTaskPool;
 
 #endif /* THREAD_TASKPOOL_HPP_ */
