@@ -25,7 +25,7 @@
 	fprintf(stderr, (str)); \
 	fprintf(stderr, "\n");
 
-static const unsigned int MAX_TASK = 20;
+static const unsigned int MAX_TASK = 10;
 
 class TaskPool: public boost::noncopyable {
 
@@ -66,9 +66,10 @@ class TaskPool: public boost::noncopyable {
 			if(pTaskPool != nullptr) {
 
 				while(!pTaskPool->m_isStopped) {
-
 					CallableBase* task = pTaskPool->PopTask();
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+					printf("Received task with priority: %d\n", task->Priority());
+					printf("Processing task within: %u(ms)\n", 1000*task->Priority());
+					boost::this_thread::sleep_for(boost::chrono::milliseconds(1000*task->Priority()));
 				}
 			}
 		}
@@ -198,7 +199,7 @@ inline void TaskPool::Run(CallableBase* task) {
 void TaskPool::PushTask(CallableBase* task) {
 
 	// check and start a thread in order to wait the incoming task
-	if(m_numRunningThreads < m_maxThreads) {
+	if(m_numRunningThreads.load() < m_maxThreads) {
 		CreateAndStartThread();
 	}
 
@@ -207,7 +208,6 @@ void TaskPool::PushTask(CallableBase* task) {
 		m_taskQueue.push_back(task);
 		m_synchSuite.cvTaskQueue.notify_one();
 	}
-
 }
 
 CallableBase* TaskPool::PopTask() {
@@ -215,20 +215,18 @@ CallableBase* TaskPool::PopTask() {
 	CallableBase* pTask = nullptr;
 	{
 		boost::unique_lock<boost::mutex> lock(m_synchSuite.mtxTaskQueue);
+		/* Do not use while loop to check the condition, the thread callback 'GetTask' will do that */
 		if(m_taskQueue.empty()) {
 			puts("Wait for task ...");
 			m_synchSuite.cvTaskQueue.wait(lock);
 		}
-		WHICHLINE;
 
 		// Double check to avoid the fake notifications
 		if(m_taskQueue.empty()) {
-			WHICHLINE;
 			lock.unlock();
 			return pTask;
 		}
 
-		WHICHLINE;
 		pTask = m_taskQueue.front();
 		m_taskQueue.pop_front();
 	}
@@ -256,6 +254,7 @@ void TaskPool::CreateAndStartThread() {
 			std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(), ThreadStateCompare<WorkerThread>());
 		}
 		m_numRunningThreads++;
+		printf("m_numRunningThreads: %u\n", m_numRunningThreads.load());
 	}
 }
 

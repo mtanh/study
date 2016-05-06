@@ -66,46 +66,59 @@ static void f3() {
 	}
 }
 
-class abc {
-public:
-	abc() { puts("Ctor"); }
-	~abc() {
-
-		if(m_a) {
-			delete m_a;
-			puts("Dtor");
-		}
-	}
-
-	void f1(int* a) {
-		m_a = a;
-	}
-
-private:
-	int* m_a;
-};
-
 void my_handler (int param)
 {
 	gTaskPool.Stop();
 }
 
+class ATask: public CallableBase {
+public:
+	ATask(): CallableBase() {}
+	ATask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL): CallableBase(arg, priority) {}
+	virtual ~ATask() {}
+	void operator()() {
+
+	}
+};
+
 int main(int argc, char *argv[]) {
 
+	//gTaskPool.Init(2);
 	gTaskPool.Start();
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1500));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+	gTaskPool.Run(new ATask(nullptr));
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2500));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+
+	/*
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_ABOVE_NORMAL));
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(3500));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	*/
 
 	/*
 	void (*prev_handler)(int);
 	prev_handler = signal (SIGINT, my_handler);
 	*/
 
-	puts("Here");
-	puts("Here");
-	puts("Here");
-	puts("Here");
-	puts("Here");
+	while(1) {
 
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+	}
+	/*
+	puts("Here");
+	puts("Here");
+	puts("Here");
+	puts("Here");
+	puts("Here");
+	*/
+
+	//boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
 	gTaskPool.Stop();
 
 	/*
