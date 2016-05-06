@@ -21,7 +21,7 @@
 #include <sys/mman.h>
 #include <iostream>
 #include <string>
-#include <list>
+#include <signal.h>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
@@ -85,18 +85,27 @@ private:
 	int* m_a;
 };
 
+void my_handler (int param)
+{
+	gTaskPool.Stop();
+}
+
 int main(int argc, char *argv[]) {
 
-	/*
-	boost::shared_ptr<abc> pAbc(new abc());
-	pAbc->f1(new int(1));
+	gTaskPool.Start();
 
-	std::vector<abc*> arr;
-	ar.push_back(pAbc.get());
+	/*
+	void (*prev_handler)(int);
+	prev_handler = signal (SIGINT, my_handler);
 	*/
 
-	gTaskPool.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+	puts("Here");
+	puts("Here");
+	puts("Here");
+	puts("Here");
+	puts("Here");
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
 	gTaskPool.Stop();
 
 	/*

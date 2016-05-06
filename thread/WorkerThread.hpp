@@ -20,6 +20,7 @@ enum ThreadState {
 	THREAD_STATE_PENDING /* Ready to stop */,
 	THREAD_STATE_RUNNING
 };
+
 enum ThreadPriority {
 	THREAD_PRIORITY_TIME_CRITICAL = 0,
 	THREAD_PRIORITY_HIGHEST,
@@ -30,20 +31,36 @@ enum ThreadPriority {
 	THREAD_PRIORITY_IDLE
 };
 
+enum CallablePriority {
+	CALLABLE_PRIORITY_HIGHEST = 0,
+	CALLABLE_PRIORITY_ABOVE_NORMAL,
+	CALLABLE_PRIORITY_NORMAL,
+	CALLABLE_PRIORITY_BELOW_NORMAL,
+	CALLABLE_PRIORITY_LOWEST
+};
+
 static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
 
 class CallableBase: public boost::noncopyable
 {
 public:
-	CallableBase(): m_arg(nullptr) {}
-	CallableBase(void* arg): m_arg(arg) {}
+	CallableBase(): m_arg(nullptr), m_priority(CALLABLE_PRIORITY_NORMAL) {}
+	CallableBase(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL): m_arg(arg), m_priority(priority) {}
 	virtual ~CallableBase () {}
 
 	void SetArg(void* arg) { m_arg = arg; }
 	virtual void operator()() = 0;
 
+	void UpdatePriority(CallablePriority priority) {
+		if(m_priority != priority) {
+			m_priority = priority;
+		}
+	}
+	inline CallablePriority Priority() const { return m_priority; }
+
 protected:
 	void* m_arg;
+	CallablePriority m_priority;
 };
 
 class WorkerThread: public boost::noncopyable {
@@ -65,7 +82,7 @@ public:
 	}
 
 	inline void SetCallable(CallableBase* pCallable) { if(pCallable != nullptr) { m_pCallable = pCallable; } }
-	inline BThreadId GetThreadId() const { return boost::this_thread::get_id(); }
+	inline BThreadId GetThreadId() const { return m_bThread.get_id(); }
 	bool Start();
 	void Detach();
 	void Stop();
