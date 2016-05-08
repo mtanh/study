@@ -21,10 +21,6 @@
 #include "../common/defines.hpp"
 #include "WorkerThread.hpp"
 
-#define ERROR(str) \
-	fprintf(stderr, (str)); \
-	fprintf(stderr, "\n");
-
 static const unsigned int MAX_TASK = 10;
 
 class TaskPool: public boost::noncopyable {
@@ -66,10 +62,14 @@ class TaskPool: public boost::noncopyable {
 			if(pTaskPool != nullptr) {
 
 				while(!pTaskPool->m_isStopped) {
+
 					CallableBase* task = pTaskPool->PopTask();
-					printf("Received task with priority: %d\n", task->Priority());
-					printf("Processing task within: %u(ms)\n", 1000*task->Priority());
-					boost::this_thread::sleep_for(boost::chrono::milliseconds(1000*task->Priority()));
+					if(task) {
+						std::cout << "Thread " << boost::this_thread::get_id() << " processed\n";
+						(*task)();
+
+						boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+					}
 				}
 			}
 		}
@@ -165,10 +165,12 @@ inline void TaskPool::Start() {
 		m_isStopped = false; // start or restart task pool
 		CreateAndStartThread();
 
+		/*
 		ThreadMonitorTask* monitorTask = new ThreadMonitorTask(this);
 		m_threadMonitoring.SetCallable(monitorTask);
 		m_threadMonitoring.Start();
 		std::cout << "[Started] m_threadMonitoring ID= " << m_threadMonitoring.GetThreadId() << "\n";
+		*/
 	}
 }
 
@@ -178,7 +180,6 @@ void TaskPool::Stop() {
 
 	// TODO Signal the waiting threads
 	m_synchSuite.cvTaskQueue.notify_all();
-
 	std::cout << "Thread: " << m_threadMonitoring.GetThreadId() << " stopped\n";
 	m_threadMonitoring.Stop();
 
@@ -202,12 +203,9 @@ void TaskPool::PushTask(CallableBase* task) {
 	if(m_numRunningThreads.load() < m_maxThreads) {
 		CreateAndStartThread();
 	}
-
-	{
-		boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxTaskQueue);
-		m_taskQueue.push_back(task);
-		m_synchSuite.cvTaskQueue.notify_one();
-	}
+	boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxTaskQueue);
+	m_taskQueue.push_back(task);
+	m_synchSuite.cvTaskQueue.notify_one();
 }
 
 CallableBase* TaskPool::PopTask() {
@@ -229,6 +227,7 @@ CallableBase* TaskPool::PopTask() {
 
 		pTask = m_taskQueue.front();
 		m_taskQueue.pop_front();
+		lock.unlock();
 	}
 	return pTask;
 }
@@ -249,12 +248,12 @@ void TaskPool::CreateAndStartThread() {
 
 		{
 			boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxThreadsMap);
-			std::cout << "[Started] thr ID= " << thr->GetThreadId() << "\n";
+			//std::cout << "[Started] thr ID= " << thr->GetThreadId() << "\n";
 			m_runningThreadsMap.push_back(thr);
 			std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(), ThreadStateCompare<WorkerThread>());
 		}
 		m_numRunningThreads++;
-		printf("m_numRunningThreads: %u\n", m_numRunningThreads.load());
+		//printf("m_numRunningThreads: %u\n", m_numRunningThreads.load());
 	}
 }
 

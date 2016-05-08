@@ -37,40 +37,6 @@
 
 TaskPool gTaskPool;
 
-struct animal: public boost::intrusive::list_base_hook<> {
-	std::string name;
-	int legs;
-	animal(std::string n, int l) :
-			name { boost::move(n) }, legs { l } {
-	}
-};
-
-/*
-typedef boost::intrusive::list<animal> animal_list;
-static animal_list animals;
-
-static void f1() {
-	animal a1 { "cat", 4 };
-	animal a2 { "shark", 0 };
-	animal a3 { "spider", 8 };
-
-	animals.push_back(a1);
-	animals.push_back(a2);
-	animals.push_back(a3);
-}
-*/
-
-static void f3() {
-	while(1) {
-		puts("AAA");
-	}
-}
-
-void my_handler (int param)
-{
-	gTaskPool.Stop();
-}
-
 class ATask: public CallableBase {
 public:
 	ATask(): CallableBase() {}
@@ -83,17 +49,27 @@ public:
 
 int main(int argc, char *argv[]) {
 
-	//gTaskPool.Init(2);
+	gTaskPool.Init(12);
 	gTaskPool.Start();
 
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+	//boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1500));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-	gTaskPool.Run(new ATask(nullptr));
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(2500));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+
+
+	while(1) {
+
+	}
 
 	/*
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
@@ -107,9 +83,6 @@ int main(int argc, char *argv[]) {
 	prev_handler = signal (SIGINT, my_handler);
 	*/
 
-	while(1) {
-
-	}
 	/*
 	puts("Here");
 	puts("Here");

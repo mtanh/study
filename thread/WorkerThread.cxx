@@ -64,7 +64,6 @@ void WorkerThread::Stop() {
 	if (m_bThread.joinable()) {
 		m_bThread.join();
 		//m_bThread.interrupt();
-		fprintf(stdout, "State: %s\n", ThreadStateStr[(int) m_threadState]);
 	}
 }
 
