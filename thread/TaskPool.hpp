@@ -199,8 +199,10 @@ void TaskPool::PushTask(CallableBase* task) {
 		CreateAndStartThread();
 	}
 
-	boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxTaskQueue);
-	m_taskQueue.push_back(task);
+	{
+		boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxTaskQueue);
+		m_taskQueue.push_back(task);
+	}
 	m_synchSuite.cvTaskQueue.notify_one();
 }
 
