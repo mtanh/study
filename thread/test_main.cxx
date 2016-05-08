@@ -49,27 +49,29 @@ public:
 
 int main(int argc, char *argv[]) {
 
-	gTaskPool.Init(12);
+	gTaskPool.Init(3);
 	gTaskPool.Start();
 
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+
+
 	//boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-
-
 	while(1) {
 
 	}
+
+	gTaskPool.Stop();
 
 	/*
 	boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
@@ -92,8 +94,6 @@ int main(int argc, char *argv[]) {
 	*/
 
 	//boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-	gTaskPool.Stop();
-
 	/*
 	WriteWorker<Writeable> a;
 	a.Init();
