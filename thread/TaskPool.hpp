@@ -8,9 +8,9 @@
 #ifndef THREAD_TASKPOOL_HPP_
 #define THREAD_TASKPOOL_HPP_
 
-#include <boost/container/vector.hpp>
-#include <boost/ptr_container/ptr_deque.hpp>
-#include <boost/fusion/include/pair.hpp>
+//#include <boost/container/vector.hpp>
+//#include <boost/ptr_container/ptr_deque.hpp>
+//#include <boost/fusion/include/pair.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/atomic.hpp>
 #include <limits.h>
@@ -56,7 +56,7 @@ class TaskPool: public boost::noncopyable {
 	public:
 		GetTask(): CallableBase() {}
 		GetTask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL): CallableBase(arg, priority) {}
-		virtual ~GetTask() { WHICHFUNC }
+		virtual ~GetTask() {}
 		virtual void operator()() {
 			TaskPool* pTaskPool = (TaskPool*)m_arg;
 			if(pTaskPool != nullptr) {
@@ -65,16 +65,25 @@ class TaskPool: public boost::noncopyable {
 
 					CallableBase* task = pTaskPool->PopTask();
 					if(task) {
-						std::cout << "Thread " << boost::this_thread::get_id() << " processed\n";
+						std::cout << "Thread " << boost::this_thread::get_id() << " pop " << task << "\n";
 						(*task)();
-
-						boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+						boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
+						std::cout << "Thread " << boost::this_thread::get_id() << " processed " << task << "\n";
 					}
 				}
 			}
 		}
 	};
 
+	typedef struct MostInsigfinicantTaskPred {
+
+		bool operator()(CallableBase* task) {
+			assert(task != nullptr);
+			return (task->Priority() == CALLABLE_PRIORITY_LOWEST);
+		}
+	} MostInsigfinicantTaskPred;
+
+	/*
 	class ThreadMonitorTask: public CallableBase {
 	public:
 		ThreadMonitorTask(): CallableBase() {}
@@ -88,16 +97,18 @@ class TaskPool: public boost::noncopyable {
 			}
 		}
 	};
+	*/
 
 public:
 	TaskPool();
 	~TaskPool();
 
-	bool Init(unsigned int maxThreadNum = (unsigned int) boost::thread::hardware_concurrency());
+	bool Init(size_t maxThreadNum = (size_t)boost::thread::hardware_concurrency());
 	void Start();
 	void Stop();
 	inline void Run(CallableBase* task);
 	inline bool Stopped() const { return m_isStopped; }
+	bool RemoveMostInsigfinicantTasks();
 	void PushTask(CallableBase* task);
 	CallableBase* PopTask();
 
@@ -105,8 +116,8 @@ private:
 	void CreateAndStartThread();
 
 private:
-	unsigned int m_maxThreads;
-	boost::atomic<unsigned int> m_numRunningThreads;
+	size_t m_maxThreads;
+	boost::atomic<size_t> m_numRunningThreads;
 	boost::atomic_bool m_isStopped;
 
 	TASK_LIST m_taskQueue;
@@ -122,7 +133,7 @@ TaskPool::TaskPool()
 , m_numRunningThreads(0) {
 }
 
-bool TaskPool::Init(unsigned int maxThreadNum) {
+bool TaskPool::Init(size_t maxThreadNum) {
 
 	bool ret = true;
 	do {
@@ -194,16 +205,35 @@ inline void TaskPool::Run(CallableBase* task) {
 
 void TaskPool::PushTask(CallableBase* task) {
 
-	// check and start a thread in order to wait the incoming task
-	if(m_numRunningThreads.load() < m_maxThreads) {
-		CreateAndStartThread();
-	}
+	do {
 
-	{
-		boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxTaskQueue);
+		if(nullptr == task) {
+			break;
+		}
+
+		// check and start a thread in order to wait the incoming task
+		if(m_numRunningThreads.load() < m_maxThreads) {
+			CreateAndStartThread();
+		}
+
+		boost::unique_lock<boost::mutex> lock(m_synchSuite.mtxTaskQueue);
+		if((size_t)m_taskQueue.size() == MAX_TASK) {
+			if(task->Priority() == CALLABLE_PRIORITY_LOWEST) {
+				std::cout << "IGNORED " << task << "[" << task->Priority() << "]" << "\n";
+				break;
+			}
+			else {
+				if(!RemoveMostInsigfinicantTasks()) {
+					break;
+				}
+			}
+		}
+
 		m_taskQueue.push_back(task);
-	}
-	m_synchSuite.cvTaskQueue.notify_one();
+		std::cout << "PUSHED " << task << "[" << task->Priority() << "]" << "\n";
+		m_synchSuite.cvTaskQueue.notify_one();
+
+	} while(false);
 }
 
 CallableBase* TaskPool::PopTask() {
@@ -228,6 +258,17 @@ CallableBase* TaskPool::PopTask() {
 	return pTask;
 }
 
+bool TaskPool::RemoveMostInsigfinicantTasks() {
+
+	TASK_LIST::iterator iter = std::find_if(m_taskQueue.begin(), m_taskQueue.end(), MostInsigfinicantTaskPred());
+	if(iter != m_taskQueue.end()) {
+		(void)m_taskQueue.erase(iter);
+		std::cout << "DELETED " << (*iter) << "[" << (*iter)->Priority() << "]" << "\n";
+		return true;
+	}
+	return false;
+}
+
 void TaskPool::CreateAndStartThread() {
 
 	// protect the whole transaction utilize lock_guard
@@ -245,8 +286,10 @@ void TaskPool::CreateAndStartThread() {
 		{
 			boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxThreadsMap);
 			m_runningThreadsMap.push_back(thr);
+			/*
 			std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(),
 					ThreadStateCompare<WorkerThread>());
+			*/
 		}
 		m_numRunningThreads++;
 		//printf("m_numRunningThreads: %u\n", m_numRunningThreads.load());

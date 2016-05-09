@@ -31,8 +31,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 
-//#include "WriteWorker.hpp"
-#include "WorkerThread.hpp"
 #include "TaskPool.hpp"
 
 TaskPool gTaskPool;
@@ -49,7 +47,7 @@ public:
 
 int main(int argc, char *argv[]) {
 
-	gTaskPool.Init(3);
+	gTaskPool.Init(2);
 	gTaskPool.Start();
 
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
@@ -57,14 +55,33 @@ int main(int argc, char *argv[]) {
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
 
+	/*
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	WHICHLINE;
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
+	WHICHLINE;
+	*/
 
 	//boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	while(1) {
