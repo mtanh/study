@@ -54,8 +54,8 @@ int main(int argc, char *argv[]) {
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
@@ -85,151 +85,8 @@ int main(int argc, char *argv[]) {
 
 	//boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
 	while(1) {
-
 	}
 
 	gTaskPool.Stop();
-
-	/*
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(3000));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_ABOVE_NORMAL));
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(3500));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	*/
-
-	/*
-	void (*prev_handler)(int);
-	prev_handler = signal (SIGINT, my_handler);
-	*/
-
-	/*
-	puts("Here");
-	puts("Here");
-	puts("Here");
-	puts("Here");
-	puts("Here");
-	*/
-
-	//boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-	/*
-	WriteWorker<Writeable> a;
-	a.Init();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	a.Stop();
-
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
-	a.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-	a.Stop();
-	*/
-
-	/*
-	TaskPool<CallableBase> gThrMgr;
-	gThrMgr.Start();
-
-	WorkerThread w;
-	Writeable* wa = new Writeable();
-	wa->SetArg(&gThrMgr);
-	w.SetCallableObj(wa);
-	w.Start();
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	w.Stop();
-	*/
-
-	/*
-	WorkerThread w;
-	w.Start();
-	std::cout << w.GetThreadId() << "\n";
-
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-	w.Stop();
-	std::cout << w.GetThreadId() << "\n";
-
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	w.Start();
-	std::cout << w.GetThreadId() << "\n";
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-	w.Stop();
-	std::cout << w.GetThreadId() << "\n";
-	*/
-
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//
-//	(void)a.Start();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-//	a.Stop();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//
-//	(void)a.Start();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-//	a.Stop();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//
-//	(void)a.Start();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-//	a.Stop();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//
-//	(void)a.Start();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-//	a.Stop();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-//
-//	(void)a.Start();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-//	a.Stop();
-//	boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-	/*
-	boost::ptr_vector<WorkerThread> threadGroup;
-	threadGroup.push_back(new WriteWorker());
-	threadGroup.push_back(new WriteWorker());
-
-	boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	boost::ptr_vector<WorkerThread>::iterator iter = threadGroup.begin();
-	for (; iter != threadGroup.end(); ++iter) {
-		(*iter).Stop();
-	}
-	*/
-
-	//boost::scoped_thread<boost::interrupt_and_join_if_joinable> th (boost::ref (f1));
-
-	/*
-	 funcntor1 f1;
-	 boost::thread_attributes atts;
-	 atts.set_stack_size(4096*10);
-
-	 boost::thread th;
-	 try
-	 {
-	 boost::thread tmp (atts, boost::ref (f1));
-	 th.swap (tmp);
-
-	 if (th.joinable())
-	 {
-	 main_thread = pthread_self();
-	 th.join();
-	 }
-
-	 //boost::this_thread::sleep (boost::posix_time::seconds (2));
-	 //th.interrupt();
-	 }
-	 catch (boost::thread_interrupted& e)
-	 {
-	 puts ("In catch");
-
-	 if (th.joinable())
-	 {
-	 puts ("Joined");
-	 main_thread = pthread_self();
-	 th.join();
-	 }
-	 }
-
-	 //boost::thread::native_handle_type type = th.native_handle();
-
-	 //assert (!pthread_equal (child_thread, main_thread));
-	 puts ("Done");
-	 */
-
 	return (EXIT_SUCCESS);
 }

@@ -291,7 +291,8 @@ void TaskPool::CreateAndStartThread() {
 					ThreadStateCompare<WorkerThread>());
 			*/
 		}
-		m_numRunningThreads++;
+		//m_numRunningThreads++;
+		m_numRunningThreads.fetch_add(1);
 		//printf("m_numRunningThreads: %u\n", m_numRunningThreads.load());
 	}
 }
