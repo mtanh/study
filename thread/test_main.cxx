@@ -47,9 +47,78 @@ public:
 	}
 };
 
+class ThreadSem: boost::noncopyable {
+
+public:
+	ThreadSem() {}
+	~ThreadSem() {}
+
+	void Init(int c) { counter = c; }
+
+	void Wait() {
+		boost::unique_lock<boost::mutex> lock(mtx);
+		while(counter < 0) {
+			cond.wait(lock);
+		}
+		counter--;
+	}
+
+	void Post() {
+		boost::unique_lock<boost::mutex> lock(mtx);
+		counter++;
+		cond.notify_all();
+	}
+
+private:
+	int counter;
+	boost::condition_variable cond;
+	boost::mutex mtx;
+};
+
+typedef struct rw_lock_t {
+	int reader;
+	ThreadSem sem;
+	boost::mutex mtx;
+} rw_lock_t;
+
+void InitRWLock(rw_lock_t* rw_lock) {
+	if(rw_lock != NULL) {
+		rw_lock->reader = 0;
+		rw_lock->sem.Init(/*num_of_writer=*/1);
+	}
+}
+
+void ReadLockAcquire(rw_lock_t* rw_lock) {
+	assert(rw_lock != NULL);
+	boost::lock_guard<boost::mutex> lock(rw_lock->mtx);
+	rw_lock->reader++;
+	if(1 == rw_lock->reader) {
+		rw_lock->sem.Wait();
+	}
+}
+
+void ReadLockRelease(rw_lock_t* rw_lock) {
+	assert(rw_lock != NULL);
+	boost::lock_guard<boost::mutex> lock(rw_lock->mtx);
+	rw_lock->reader--;
+	if(0 == rw_lock->reader) {
+		rw_lock->sem.Post();
+	}
+}
+
+void WriteLockAcquire(rw_lock_t* rw_lock) {
+	assert(rw_lock != NULL);
+	rw_lock->sem.Wait();
+}
+
+void WriteLockRelease(rw_lock_t* rw_lock) {
+	assert(rw_lock != NULL);
+	rw_lock->sem.Post();
+}
+
 int main(int argc, char *argv[]) {
 
-	gTaskPool.Init(2);
+	//gTaskPool.Init(2);
 	gTaskPool.Start();
 
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
@@ -64,9 +133,6 @@ int main(int argc, char *argv[]) {
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
 
 	/*
 	sem_t job_queue_count;
