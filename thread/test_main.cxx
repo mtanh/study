@@ -22,6 +22,7 @@
 #include <iostream>
 #include <string>
 #include <signal.h>
+#include <semaphore.h>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
@@ -30,10 +31,11 @@
 #include <boost/type.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/interprocess/shared_memory_object.hpp>
 
 #include "TaskPool.hpp"
 
-TaskPool gTaskPool;
+LocalTaskPool gTaskPool;
 
 class ATask: public CallableBase {
 public:
@@ -65,6 +67,20 @@ int main(int argc, char *argv[]) {
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
+
+	/*
+	sem_t job_queue_count;
+	sem_init (&job_queue_count, 0, 0);
+	sem_wait (&job_queue_count);
+
+	using namespace boost::interprocess;
+	shared_memory_object shdmem{open_or_create, "Boost", read_write};
+	  shdmem.truncate(1024);
+	  std::cout << shdmem.get_name() << '\n';
+	  offset_t size;
+	  if (shdmem.get_size(size))
+	    std::cout << size << '\n';
+	*/
 
 	/*
 	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));

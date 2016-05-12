@@ -18,12 +18,15 @@
 #include <deque>
 #include <algorithm>
 
+#include <boost/interprocess/sync/mutex_family.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include "../common/defines.hpp"
 #include "WorkerThread.hpp"
 
 static const unsigned int MAX_TASK = 10;
 
-class TaskPool: public boost::noncopyable {
+class LocalTaskPool: public boost::noncopyable {
 
 	typedef std::deque<CallableBase*> TASK_LIST;
 	typedef std::vector<WorkerThread*> THREAD_LIST;
@@ -58,7 +61,7 @@ class TaskPool: public boost::noncopyable {
 		GetTask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL): CallableBase(arg, priority) {}
 		virtual ~GetTask() {}
 		virtual void operator()() {
-			TaskPool* pTaskPool = (TaskPool*)m_arg;
+			LocalTaskPool* pTaskPool = (LocalTaskPool*)m_arg;
 			if(pTaskPool != nullptr) {
 
 				while(!pTaskPool->m_isStopped) {
@@ -100,8 +103,8 @@ class TaskPool: public boost::noncopyable {
 	*/
 
 public:
-	TaskPool();
-	~TaskPool();
+	LocalTaskPool();
+	~LocalTaskPool();
 
 	bool Init(size_t maxThreadNum = (size_t)boost::thread::hardware_concurrency());
 	void Start();
@@ -127,13 +130,13 @@ private:
 };
 
 
-TaskPool::TaskPool()
+LocalTaskPool::LocalTaskPool()
 : m_maxThreads((unsigned int) boost::thread::hardware_concurrency())
 , m_isStopped(true)
 , m_numRunningThreads(0) {
 }
 
-bool TaskPool::Init(size_t maxThreadNum) {
+bool LocalTaskPool::Init(size_t maxThreadNum) {
 
 	bool ret = true;
 	do {
@@ -148,7 +151,7 @@ bool TaskPool::Init(size_t maxThreadNum) {
 	return ret;
 }
 
-TaskPool::~TaskPool() {
+LocalTaskPool::~LocalTaskPool() {
 
 	WHICHFUNC
 	THREAD_LIST::iterator it = m_runningThreadsMap.begin();
@@ -164,7 +167,7 @@ TaskPool::~TaskPool() {
 	}
 }
 
-inline void TaskPool::Start() {
+inline void LocalTaskPool::Start() {
 
 	if (m_isStopped) {
 		m_isStopped = false; // start or restart task pool
@@ -179,7 +182,7 @@ inline void TaskPool::Start() {
 	}
 }
 
-void TaskPool::Stop() {
+void LocalTaskPool::Stop() {
 
 	if(!m_isStopped) {
 		m_isStopped = true;
@@ -196,14 +199,14 @@ void TaskPool::Stop() {
 	}
 }
 
-inline void TaskPool::Run(CallableBase* task) {
+inline void LocalTaskPool::Run(CallableBase* task) {
 
 	if(!m_isStopped) {
 		PushTask(task);
 	}
 }
 
-void TaskPool::PushTask(CallableBase* task) {
+void LocalTaskPool::PushTask(CallableBase* task) {
 
 	do {
 
@@ -236,12 +239,12 @@ void TaskPool::PushTask(CallableBase* task) {
 	} while(false);
 }
 
-CallableBase* TaskPool::PopTask() {
+CallableBase* LocalTaskPool::PopTask() {
 
 	CallableBase* pTask = nullptr;
 	{
 		boost::unique_lock<boost::mutex> lock(m_synchSuite.mtxTaskQueue);
-		if(m_taskQueue.empty()) {
+		while(m_taskQueue.empty()) {
 			puts("Wait for task ...");
 			m_synchSuite.cvTaskQueue.wait(lock);
 		}
@@ -258,7 +261,7 @@ CallableBase* TaskPool::PopTask() {
 	return pTask;
 }
 
-bool TaskPool::RemoveMostInsigfinicantTasks() {
+bool LocalTaskPool::RemoveMostInsigfinicantTasks() {
 
 	TASK_LIST::iterator iter = std::find_if(m_taskQueue.begin(), m_taskQueue.end(), MostInsigfinicantTaskPred());
 	if(iter != m_taskQueue.end()) {
@@ -269,7 +272,7 @@ bool TaskPool::RemoveMostInsigfinicantTasks() {
 	return false;
 }
 
-void TaskPool::CreateAndStartThread() {
+void LocalTaskPool::CreateAndStartThread() {
 
 	// protect the whole transaction utilize lock_guard
 	if(!m_isStopped) {
@@ -297,6 +300,6 @@ void TaskPool::CreateAndStartThread() {
 	}
 }
 
-extern TaskPool gTaskPool;
+extern LocalTaskPool gTaskPool;
 
 #endif /* THREAD_TASKPOOL_HPP_ */
