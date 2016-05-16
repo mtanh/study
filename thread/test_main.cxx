@@ -116,59 +116,78 @@ void WriteLockRelease(rw_lock_t* rw_lock) {
 	rw_lock->sem.Post();
 }
 
-int main(int argc, char *argv[]) {
+void f1() {
+	static boost::thread_specific_ptr<int> tls1;
+	if(!tls1.get()) {
+		tls1.reset(new int(1));
+		std::cout << &tls1 << "\n";
+		std::cout << *tls1 << "\n";
+	}
+}
 
-	//gTaskPool.Init(2);
-	gTaskPool.Start();
+void f2() {
+	static boost::thread_specific_ptr<int> tls;
+	if(!tls.get()) {
+		tls.reset(new int(2));
+		std::cout << &tls << "\n";
+		std::cout << *tls << "\n";
+	}
+}
 
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
+void cleaner(int* val) {
+	return;
+}
 
-	/*
-	sem_t job_queue_count;
-	sem_init (&job_queue_count, 0, 0);
-	sem_wait (&job_queue_count);
+void f111() {
+	boost::thread_specific_ptr<int> tmp(cleaner);
+	if(!tmp.get()) {
+		int a = 10;
+		tmp.reset(&a);
+	}
+}
 
-	using namespace boost::interprocess;
-	shared_memory_object shdmem{open_or_create, "Boost", read_write};
-	  shdmem.truncate(1024);
-	  std::cout << shdmem.get_name() << '\n';
-	  offset_t size;
-	  if (shdmem.get_size(size))
-	    std::cout << size << '\n';
-	*/
+struct CallableSt {
 
-	/*
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_HIGHEST));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_LOWEST));
-	WHICHLINE;
-	gTaskPool.Run(new ATask(nullptr, CALLABLE_PRIORITY_BELOW_NORMAL));
-	WHICHLINE;
-	*/
+	typedef struct thread_spec_data {
+		boost::thread::id id;
+	} thread_spec_data;
+	boost::thread_specific_ptr<thread_spec_data> thread_spec_ptr_;
 
-	//boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
-	while(1) {
+	void operator()() {
+		if(thread_spec_ptr_.get() != NULL) {
+			thread_spec_data data;
+			data.id = boost::this_thread::get_id();
+			thread_spec_ptr_.reset(&data);
+			std::cout << "Thread ID: " << thread_spec_ptr_->id << "\n";
+		}
 	}
 
-	gTaskPool.Stop();
+};
+
+void thread()
+{
+	typedef struct thread_spec_data {
+		boost::thread::id id;
+	} thread_spec_data;
+	boost::thread_specific_ptr<thread_spec_data> thread_spec_ptr_;
+
+	try
+	{
+		if(thread_spec_ptr_.get() == NULL) {
+			thread_spec_data data;
+			data.id = boost::this_thread::get_id();
+			thread_spec_ptr_.reset(&data);
+			std::cout << "Thread ID: " << thread_spec_ptr_->id << "\n";
+		}
+	}
+	catch (boost::thread_interrupted&) {}
+}
+
+int main(int argc, char *argv[]) {
+
+	boost::thread t{thread};
+	//t.interrupt();
+	t.join();
+
 	return (EXIT_SUCCESS);
 }
