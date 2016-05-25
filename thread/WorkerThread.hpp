@@ -11,6 +11,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
+#include <boost/intrusive/list_hook.hpp>
 
 typedef boost::thread BThread;
 typedef BThread::id BThreadId;
@@ -42,7 +43,8 @@ enum CallablePriority {
 	CALLABLE_PRIORITY_ABOVE_NORMAL,
 	CALLABLE_PRIORITY_NORMAL,
 	CALLABLE_PRIORITY_BELOW_NORMAL,
-	CALLABLE_PRIORITY_LOWEST
+	CALLABLE_PRIORITY_LOWEST,
+	CALLABLE_PRIORITY_COUNT
 };
 
 static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
@@ -55,8 +57,8 @@ public:
 	virtual ~CallableBase () {}
 
 	void SetArg(void* arg) { m_arg = arg; }
-	virtual void operator()() = 0;
 
+	virtual void operator()() = 0;
 	void UpdatePriority(CallablePriority priority) {
 		if(m_priority != priority) {
 			m_priority = priority;

@@ -24,6 +24,8 @@
 #include <signal.h>
 #include <semaphore.h>
 #include <map>
+#include <queue>
+#include <time.h>
 #include <unordered_map>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/container/vector.hpp>
@@ -36,6 +38,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/heap/priority_queue.hpp>
+#include <unordered_map>
 
 #include "TaskPool.hpp"
 
@@ -137,33 +140,6 @@ WriteLockRelease(rw_lock_t* rw_lock)
   rw_lock->sem.Post();
 }
 
-template<typename T>
-  class CallablePrioprityCompare
-  {
-  public:
-    bool
-    operator()(/*const*/ T* /*const*/ t1, /*const*/ T* /*const*/ t2)
-    {
-      return PriorityGreat(t1->Priority(), t2->Priority());
-    }
-    bool
-    operator()(const T* const t, CallablePriority priority)
-    {
-      return PriorityGreat(t->Priority(), priority);
-    }
-    bool
-    operator()(CallablePriority priority, const T* const t)
-    {
-      return PriorityGreat(t->Priority(), priority);
-    }
-  private:
-    bool
-    PriorityGreat(CallablePriority priority1, CallablePriority priority2) const
-    {
-      return (priority1 < priority2);
-    }
-  };
-
 class ATask : public CallableBase
   {
   public:
@@ -171,47 +147,110 @@ class ATask : public CallableBase
       CallableBase()
     {
     }
-    ATask(char* taskName, void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
+    ATask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
       CallableBase(arg, priority)
-    , m_taskName(taskName)
     {
     }
     virtual
     ~ATask()
     {
     }
-    const char*
-    GetName() const
-    {
-      return m_taskName;
-    }
     virtual void
     operator()()
     {
-      GetName();
+      WHICHFUNC;
     }
-
-  private:
-    char* m_taskName;
   };
+
+typedef struct CAllablePriCompare
+    {
+    public:
+      bool
+      operator()(CallableBase* t1, CallableBase* t2)
+      {
+        return StateLess( t1->Priority(), t2->Priority() );
+      }
+      bool
+      operator()(const CallableBase* const t, CallablePriority pri)
+      {
+        return StateLess(t->Priority(), pri);
+      }
+      bool
+      operator()(CallablePriority pri, const CallableBase* const t)
+      {
+        return StateLess(t->Priority(), pri);
+      }
+    private:
+      bool
+      StateLess(CallablePriority state1, CallablePriority state2)
+      {
+        return (state1 > state2);
+      }
+    } CAllablePriCompare;
 
 int
 main(int argc, char *argv[])
 {
+  //srand ( time(NULL) );
+
+  std::unordered_map<int, CallableBase*> mymap = {
+       {CALLABLE_PRIORITY_HIGHEST, new ATask(NULL, CALLABLE_PRIORITY_HIGHEST)},
+       {CALLABLE_PRIORITY_NORMAL, new ATask(NULL, CALLABLE_PRIORITY_HIGHEST)},
+       {CALLABLE_PRIORITY_HIGHEST, new ATask(NULL, CALLABLE_PRIORITY_NORMAL)} };
+
+  std::unordered_map<int, CallableBase*>::const_iterator got = mymap.find (CALLABLE_PRIORITY_HIGHEST);
+
+    if ( got == mymap.end() )
+      std::cout << "not found";
+    else
+      std::cout << got->first << " is " << got->second->Priority();
+
+    std::cout << std::endl;
+
   /*
-  gTaskPool.Init(2);
+  gTaskPool.Init(12);
   gTaskPool.Start();
+
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+
+  //std::priority_queue<CallableBase*, std::vector<CallableBase*>, CAllablePriCompare> pq;
+  /*
+  std::vector<CallableBase*> pq;
+  pq.reserve(10000000);
+  for(int i = 0; i < 10000000; ++i)
+    {
+      //pq.emplace(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+      pq.emplace_back(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+    }
+  std::sort(pq.begin(), pq.end(), CAllablePriCompare());
   */
 
-  boost::heap::priority_queue<CallableBase*, boost::heap::compare<CallablePrioprityCompare<CallableBase> > > pq;
-  pq.push(new ATask("A", nullptr, CALLABLE_PRIORITY_HIGHEST));
-  pq.push(new ATask("B", nullptr));
-  pq.push(new ATask("C", nullptr, CALLABLE_PRIORITY_ABOVE_NORMAL));
+  //pq.push(new ATask(nullptr));
+  //pq.push(new ATask(nullptr, CALLABLE_PRIORITY_ABOVE_NORMAL));
+
+  /*
+  while (!pq.empty())
+    {
+       CallableBase* p = pq.top();
+       std::cout << p->Priority() << "\n";
+       pq.pop();
+    }
+  */
 
   /*
   while(1)
     {
-
     }
   gTaskPool.Stop();
   */

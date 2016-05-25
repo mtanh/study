@@ -96,7 +96,7 @@ class LocalTaskPool : public boost::noncopyable
                       << " pop " << task << "\n";
                   (*task)();
                   boost::this_thread::sleep_for(
-                      boost::chrono::milliseconds(5000));
+                      boost::chrono::milliseconds(2000));
                   std::cout << "Thread " << boost::this_thread::get_id()
                       << " processed " << task << "\n";
                 }
@@ -196,7 +196,6 @@ LocalTaskPool::Init(size_t maxThreadNum)
 
 LocalTaskPool::~LocalTaskPool()
 {
-  WHICHFUNC
   THREAD_LIST::iterator it = m_runningThreadsMap.begin();
   for (; it != m_runningThreadsMap.end(); ++it)
     {
