@@ -39,6 +39,7 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/heap/priority_queue.hpp>
 #include <unordered_map>
+#include <boost/interprocess/sync/interprocess_semaphore.hpp>
 
 #include "TaskPool.hpp"
 
@@ -60,11 +61,16 @@ public:
     counter = c;
   }
 
+  const int GetCount() const
+  {
+    return counter;
+  }
+
   void
   Wait()
   {
     boost::unique_lock<boost::mutex> lock(mtx);
-    while (counter < 0)
+    while (counter == 0)
       {
         cond.wait(lock);
       }
@@ -162,21 +168,22 @@ class ATask : public CallableBase
     }
   };
 
-typedef struct CAllablePriCompare
+template <typename T>
+struct CAllablePriCompare
     {
     public:
       bool
-      operator()(CallableBase* t1, CallableBase* t2)
+      operator()(T* t1, T* t2)
       {
         return StateLess( t1->Priority(), t2->Priority() );
       }
       bool
-      operator()(const CallableBase* const t, CallablePriority pri)
+      operator()(const T* const t, CallablePriority pri)
       {
         return StateLess(t->Priority(), pri);
       }
       bool
-      operator()(CallablePriority pri, const CallableBase* const t)
+      operator()(CallablePriority pri, const T* const t)
       {
         return StateLess(t->Priority(), pri);
       }
@@ -186,29 +193,116 @@ typedef struct CAllablePriCompare
       {
         return (state1 > state2);
       }
-    } CAllablePriCompare;
+    };
+
+ThreadSem gThreadSem;
+static std::deque<int> gBuffer;
+boost::mutex mtx;
+
+#define MAX 2
+
+void producer(ThreadSem* thread_sem)
+{
+  for(;;)
+    {
+      while(gBuffer.size() == MAX)
+        {
+          puts("Producer wait ...");
+          thread_sem->Wait();
+        }
+
+      if(gBuffer.size() < MAX)
+        {
+          int tmp = (int)rand()%100;
+          gBuffer.push_back(tmp);
+          //std::cout << "[" << boost::this_thread::get_id() << "]" <<" pushed: " << tmp << " " << gBuffer.size() << "\n";
+          //std::cout << "pushed: " << tmp << " " << gBuffer.size() << "\n";
+          boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+          thread_sem->Post();
+        }
+    }
+}
+
+void consumer(ThreadSem* thread_sem)
+{
+  for(;;)
+    {
+      while(gBuffer.empty() )
+        {
+          puts("Consumer wait ...");
+          thread_sem->Wait();
+        }
+
+      boost::lock_guard<boost::mutex> lock(mtx);
+      if(!gBuffer.empty())
+        {
+          std::cout << "[" << boost::this_thread::get_id() << "]" <<" poped: " << gBuffer.front() << " " << gBuffer.size() << "\n";
+          gBuffer.pop_front();
+          boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+        }
+        thread_sem->Post();
+    }
+}
 
 int
 main(int argc, char *argv[])
 {
-  //srand ( time(NULL) );
+  gThreadSem.Init(MAX);
 
-  std::unordered_map<int, CallableBase*> mymap = {
-       {CALLABLE_PRIORITY_HIGHEST, new ATask(NULL, CALLABLE_PRIORITY_HIGHEST)},
-       {CALLABLE_PRIORITY_NORMAL, new ATask(NULL, CALLABLE_PRIORITY_HIGHEST)},
-       {CALLABLE_PRIORITY_HIGHEST, new ATask(NULL, CALLABLE_PRIORITY_NORMAL)} };
+  boost::thread pro( &producer, &gThreadSem);
+  //boost::thread pro2( &producer, &gThreadSem);
+  //boost::thread pro3( &producer, &gThreadSem);
 
-  std::unordered_map<int, CallableBase*>::const_iterator got = mymap.find (CALLABLE_PRIORITY_HIGHEST);
+  boost::thread cons1( &consumer, &gThreadSem);
+  boost::thread cons2( &consumer, &gThreadSem);
+  boost::thread cons3( &consumer, &gThreadSem);
+  /*boost::thread cons4( &consumer, &gThreadSem);
+  boost::thread cons5( &consumer, &gThreadSem);
+  boost::thread cons6( &consumer, &gThreadSem);*/
 
-    if ( got == mymap.end() )
-      std::cout << "not found";
-    else
-      std::cout << got->first << " is " << got->second->Priority();
-
-    std::cout << std::endl;
+  pro.join();
+  //pro2.join();
+  //pro3.join();
+  cons1.join();
+  cons2.join();
+  cons3.join();
+  /*cons4.join();
+  cons5.join();
+  cons6.join();*/
 
   /*
-  gTaskPool.Init(12);
+  srand ( time(NULL) );
+  int i = 0;
+  */
+
+  /*
+  std::unordered_multimap<int, CallableBase*> container;
+  for(; i<10000;++i)
+    {
+      container.insert( std::make_pair( (CallablePriority)rand()%CALLABLE_PRIORITY_COUNT, new ATask(nullptr) ) );
+    }
+    */
+
+  /*
+  std::vector<CallableBase*> container;
+  container.reserve(10000);
+  for(i < 10000; ++i)
+    {
+      container.emplace_back(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+    }
+  std::sort(container.begin(), container.end(), CAllablePriCompare<CallableBase>());
+  */
+
+  /*
+  std::priority_queue<CallableBase*, std::vector<CallableBase*>, CAllablePriCompare<CallableBase> > container;
+  for(; i < 10000; ++i)
+    {
+      container.emplace(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+    }
+    */
+
+  /*
+  gTaskPool.Init(2);
   gTaskPool.Start();
 
   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
@@ -223,32 +317,11 @@ main(int argc, char *argv[])
   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
 
-  //std::priority_queue<CallableBase*, std::vector<CallableBase*>, CAllablePriCompare> pq;
-  /*
-  std::vector<CallableBase*> pq;
-  pq.reserve(10000000);
-  for(int i = 0; i < 10000000; ++i)
-    {
-      //pq.emplace(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
-      pq.emplace_back(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
-    }
-  std::sort(pq.begin(), pq.end(), CAllablePriCompare());
-  */
-
-  //pq.push(new ATask(nullptr));
-  //pq.push(new ATask(nullptr, CALLABLE_PRIORITY_ABOVE_NORMAL));
-
-  /*
-  while (!pq.empty())
-    {
-       CallableBase* p = pq.top();
-       std::cout << p->Priority() << "\n";
-       pq.pop();
-    }
-  */
-
-  /*
   while(1)
     {
     }
