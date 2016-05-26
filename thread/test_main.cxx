@@ -199,7 +199,7 @@ ThreadSem gThreadSem;
 static std::deque<int> gBuffer;
 boost::mutex mtx;
 
-#define MAX 2
+#define MAX 10
 
 void producer(ThreadSem* thread_sem)
 {
@@ -215,9 +215,8 @@ void producer(ThreadSem* thread_sem)
         {
           int tmp = (int)rand()%100;
           gBuffer.push_back(tmp);
-          //std::cout << "[" << boost::this_thread::get_id() << "]" <<" pushed: " << tmp << " " << gBuffer.size() << "\n";
-          //std::cout << "pushed: " << tmp << " " << gBuffer.size() << "\n";
-          boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+          std::cout << "pushed: " << tmp << " " << gBuffer.size() << "\n";
+          //boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
           thread_sem->Post();
         }
     }
@@ -233,14 +232,15 @@ void consumer(ThreadSem* thread_sem)
           thread_sem->Wait();
         }
 
-      boost::lock_guard<boost::mutex> lock(mtx);
+      boost::unique_lock<boost::mutex> lock(mtx);
       if(!gBuffer.empty())
         {
-          std::cout << "[" << boost::this_thread::get_id() << "]" <<" poped: " << gBuffer.front() << " " << gBuffer.size() << "\n";
+          std::cout << "Poped: " << gBuffer.front() << " " << gBuffer.size() << "\n";
           gBuffer.pop_front();
-          boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+          boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
         }
         thread_sem->Post();
+        lock.unlock();
     }
 }
 
@@ -265,7 +265,7 @@ main(int argc, char *argv[])
   //pro3.join();
   cons1.join();
   cons2.join();
-  cons3.join();
+  //cons3.join();
   /*cons4.join();
   cons5.join();
   cons6.join();*/
