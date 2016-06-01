@@ -9,86 +9,115 @@
 
 #include "../common/defines.hpp"
 
-WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart)
-: m_threadState(THREAD_STATE_STOPPED)
-, m_threadPriority(thrPriority)
-, m_threadProc(nullptr)
-, m_pCallable(nullptr) {
+WorkerThread::WorkerThread(ThreadPriority thrPriority, bool autoStart) :
+    m_threadState(THREAD_STATE_STOPPED), m_threadPriority(thrPriority), m_threadProc(
+        nullptr), m_pCallable(nullptr)
+{
 
-	if (autoStart) {
-		if (!Start()) {
-			fprintf(stderr, "WorkerThread ctor failed\n");
-		}
-	}
+  if (autoStart)
+    {
+      if (!Start())
+        {
+          fprintf(stderr, "WorkerThread ctor failed\n");
+        }
+    }
 }
 
-WorkerThread::~WorkerThread() {
+WorkerThread::~WorkerThread()
+{
 
-	if(m_pCallable != nullptr) {
-		delete m_pCallable;
-		m_pCallable = nullptr;
-	}
+  if (m_pCallable != nullptr)
+    {
+      delete m_pCallable;
+      m_pCallable = nullptr;
+    }
 }
 
-bool WorkerThread::Start() {
+bool
+WorkerThread::Start()
+{
 
-	do {
-		if (Running()) {
-			break;
-		}
+  do
+    {
+      if (Running())
+        {
+          break;
+        }
 
-		m_threadState = THREAD_STATE_RUNNING;
-		m_threadProc = &WorkerThread::ThreadProc;
-		/* thread attributions here */
-		boost::thread tmp = boost::thread(m_threadProc, this);
-		m_bThread.swap(tmp);
+      m_threadState = THREAD_STATE_RUNNING;
+      m_threadProc = &WorkerThread::ThreadProc;
+      /* thread attributions here */
+      boost::thread tmp = boost::thread(m_threadProc, this);
+      m_bThread.swap(tmp);
 
-	} while (false);
+    }
+  while (false);
 
-	return (Running());
+  return (Running());
 }
 
-void WorkerThread::Detach() {
+void
+WorkerThread::Detach()
+{
 
-	if (Running()) {
-		m_bThread.detach();
-	}
+  if (Running())
+    {
+      m_bThread.detach();
+    }
 }
 
-void WorkerThread::Stop() {
+void
+WorkerThread::Stop()
+{
 
-	if (Running()) {
-		m_threadState = THREAD_STATE_STOPPED;
-	}
+  if (Running())
+    {
+      m_threadState = THREAD_STATE_STOPPED;
+    }
 
-	if (m_bThread.joinable()) {
-		m_bThread.join();
-		//m_bThread.interrupt();
-	}
+  if (m_bThread.joinable())
+    {
+      m_bThread.join();
+      //m_bThread.interrupt();
+    }
 }
 
-void WorkerThread::ChangeThreadPriority(ThreadPriority p) {
+void
+WorkerThread::ChangeThreadPriority(ThreadPriority p)
+{
 
-	m_threadPriority = p;
+  m_threadPriority = p;
 }
 
-void WorkerThread::PrivateThreadProc(void) {
+void
+WorkerThread::PrivateThreadProc(void)
+{
 
-	if(m_pCallable != nullptr) {
-		(*m_pCallable)();
-	}
+  if (m_pCallable != nullptr)
+    {
+      (*m_pCallable)();
+    }
 }
 
-void WorkerThread::ThreadProc() {
+void
+WorkerThread::ThreadProc()
+{
 
-	try {
-		PrivateThreadProc();
-	} catch (boost::thread_interrupted& ei) {
-		fprintf(stderr, "Thread interrupted\n");
-	} catch (boost::thread_exception& ex) {
-		fprintf(stderr, "%s\n", ex.what());
-	} catch (...) {
-		perror("Failed in WorkerThread::ThreadProc");
-		Stop();
-	}
+  try
+    {
+      PrivateThreadProc();
+    }
+  catch (boost::thread_interrupted& ei)
+    {
+      fprintf(stderr, "Thread interrupted\n");
+    }
+  catch (boost::thread_exception& ex)
+    {
+      fprintf(stderr, "%s\n", ex.what());
+    }
+  catch (...)
+    {
+      perror("Failed in WorkerThread::ThreadProc");
+      Stop();
+    }
 }

@@ -61,7 +61,8 @@ public:
     counter = c;
   }
 
-  const int GetCount() const
+  const int
+  GetCount() const
   {
     return counter;
   }
@@ -147,53 +148,54 @@ WriteLockRelease(rw_lock_t* rw_lock)
 }
 
 class ATask : public CallableBase
+{
+public:
+  ATask() :
+      CallableBase()
+  {
+  }
+  ATask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
+      CallableBase(arg, priority)
+  {
+  }
+  virtual
+  ~ATask()
+  {
+  }
+  virtual void
+  operator()()
+  {
+    WHICHFUNC
+    ;
+  }
+};
+
+template<typename T>
+  struct CAllablePriCompare
   {
   public:
-    ATask() :
-      CallableBase()
+    bool
+    operator()(T* t1, T* t2)
     {
+      return StateLess(t1->Priority(), t2->Priority());
     }
-    ATask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
-      CallableBase(arg, priority)
+    bool
+    operator()(const T* const t, CallablePriority pri)
     {
+      return StateLess(t->Priority(), pri);
     }
-    virtual
-    ~ATask()
+    bool
+    operator()(CallablePriority pri, const T* const t)
     {
+      return StateLess(t->Priority(), pri);
     }
-    virtual void
-    operator()()
+  private:
+    bool
+    StateLess(CallablePriority state1, CallablePriority state2)
     {
-      WHICHFUNC;
+      return (state1 > state2);
     }
   };
-
-template <typename T>
-struct CAllablePriCompare
-    {
-    public:
-      bool
-      operator()(T* t1, T* t2)
-      {
-        return StateLess( t1->Priority(), t2->Priority() );
-      }
-      bool
-      operator()(const T* const t, CallablePriority pri)
-      {
-        return StateLess(t->Priority(), pri);
-      }
-      bool
-      operator()(CallablePriority pri, const T* const t)
-      {
-        return StateLess(t->Priority(), pri);
-      }
-    private:
-      bool
-      StateLess(CallablePriority state1, CallablePriority state2)
-      {
-        return (state1 > state2);
-      }
-    };
 
 ThreadSem gThreadSem;
 static std::deque<int> gBuffer;
@@ -201,46 +203,49 @@ boost::mutex mtx;
 
 #define MAX 10
 
-void producer(ThreadSem* thread_sem)
+void
+producer(ThreadSem* thread_sem)
 {
-  for(;;)
+  for (;;)
     {
-      while(gBuffer.size() == MAX)
+      while (gBuffer.size() == MAX)
         {
           puts("Producer wait ...");
           thread_sem->Wait();
         }
 
-      if(gBuffer.size() < MAX)
+      if (gBuffer.size() < MAX)
         {
-          int tmp = (int)rand()%100;
+          int tmp = (int) rand() % 100;
           gBuffer.push_back(tmp);
           std::cout << "pushed: " << tmp << " " << gBuffer.size() << "\n";
-          //boost::this_thread::sleep_for(boost::chrono::milliseconds(50));
+          boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
           thread_sem->Post();
         }
     }
 }
 
-void consumer(ThreadSem* thread_sem)
+void
+consumer(ThreadSem* thread_sem)
 {
-  for(;;)
+  for (;;)
     {
-      while(gBuffer.empty() )
+      while (gBuffer.empty())
         {
           puts("Consumer wait ...");
           thread_sem->Wait();
         }
 
       boost::unique_lock<boost::mutex> lock(mtx);
-      if(!gBuffer.empty())
+      if (!gBuffer.empty())
         {
-          std::cout << "Poped: " << gBuffer.front() << " " << gBuffer.size() << "\n";
+          std::cout << boost::this_thread::get_id() << " poped: "
+              << gBuffer.front() << " " << gBuffer.size() << "\n";
           gBuffer.pop_front();
-          boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+          boost::this_thread::sleep_for(boost::chrono::milliseconds(5000));
         }
-        thread_sem->Post();
-        lock.unlock();
+      thread_sem->Post();
+      lock.unlock();
     }
 }
 
@@ -249,16 +254,16 @@ main(int argc, char *argv[])
 {
   gThreadSem.Init(MAX);
 
-  boost::thread pro( &producer, &gThreadSem);
+  boost::thread pro(&producer, &gThreadSem);
   //boost::thread pro2( &producer, &gThreadSem);
   //boost::thread pro3( &producer, &gThreadSem);
 
-  boost::thread cons1( &consumer, &gThreadSem);
-  boost::thread cons2( &consumer, &gThreadSem);
-  boost::thread cons3( &consumer, &gThreadSem);
-  /*boost::thread cons4( &consumer, &gThreadSem);
-  boost::thread cons5( &consumer, &gThreadSem);
-  boost::thread cons6( &consumer, &gThreadSem);*/
+  boost::thread cons1(&consumer, &gThreadSem);
+  boost::thread cons2(&consumer, &gThreadSem);
+  /*boost::thread cons3( &consumer, &gThreadSem);
+   boost::thread cons4( &consumer, &gThreadSem);
+   boost::thread cons5( &consumer, &gThreadSem);
+   boost::thread cons6( &consumer, &gThreadSem);*/
 
   pro.join();
   //pro2.join();
@@ -267,66 +272,66 @@ main(int argc, char *argv[])
   cons2.join();
   //cons3.join();
   /*cons4.join();
-  cons5.join();
-  cons6.join();*/
+   cons5.join();
+   cons6.join();*/
 
   /*
-  srand ( time(NULL) );
-  int i = 0;
-  */
+   srand ( time(NULL) );
+   int i = 0;
+   */
 
   /*
-  std::unordered_multimap<int, CallableBase*> container;
-  for(; i<10000;++i)
-    {
-      container.insert( std::make_pair( (CallablePriority)rand()%CALLABLE_PRIORITY_COUNT, new ATask(nullptr) ) );
-    }
-    */
+   std::unordered_multimap<int, CallableBase*> container;
+   for(; i<10000;++i)
+   {
+   container.insert( std::make_pair( (CallablePriority)rand()%CALLABLE_PRIORITY_COUNT, new ATask(nullptr) ) );
+   }
+   */
 
   /*
-  std::vector<CallableBase*> container;
-  container.reserve(10000);
-  for(i < 10000; ++i)
-    {
-      container.emplace_back(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
-    }
-  std::sort(container.begin(), container.end(), CAllablePriCompare<CallableBase>());
-  */
+   std::vector<CallableBase*> container;
+   container.reserve(10000);
+   for(i < 10000; ++i)
+   {
+   container.emplace_back(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+   }
+   std::sort(container.begin(), container.end(), CAllablePriCompare<CallableBase>());
+   */
 
   /*
-  std::priority_queue<CallableBase*, std::vector<CallableBase*>, CAllablePriCompare<CallableBase> > container;
-  for(; i < 10000; ++i)
-    {
-      container.emplace(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
-    }
-    */
+   std::priority_queue<CallableBase*, std::vector<CallableBase*>, CAllablePriCompare<CallableBase> > container;
+   for(; i < 10000; ++i)
+   {
+   container.emplace(new ATask(nullptr, (CallablePriority)(rand()%CALLABLE_PRIORITY_COUNT)));
+   }
+   */
 
   /*
-  gTaskPool.Init(2);
-  gTaskPool.Start();
+   gTaskPool.Init(2);
+   gTaskPool.Start();
 
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
-  gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_ABOVE_NORMAL) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_LOWEST) );
+   gTaskPool.Run( new ATask(NULL, CALLABLE_PRIORITY_HIGHEST) );
 
-  while(1)
-    {
-    }
-  gTaskPool.Stop();
-  */
+   while(1)
+   {
+   }
+   gTaskPool.Stop();
+   */
 
   return (EXIT_SUCCESS);
 }

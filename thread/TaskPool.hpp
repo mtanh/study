@@ -70,11 +70,11 @@ class LocalTaskPool : public boost::noncopyable
   {
   public:
     GetTask() :
-      CallableBase()
+        CallableBase()
     {
     }
     GetTask(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
-      CallableBase(arg, priority)
+        CallableBase(arg, priority)
     {
     }
     virtual
@@ -171,8 +171,8 @@ private:
 };
 
 LocalTaskPool::LocalTaskPool() :
-  m_maxThreads((unsigned int) boost::thread::hardware_concurrency()),
-      m_isStopped(true), m_numRunningThreads(0)
+    m_maxThreads((unsigned int) boost::thread::hardware_concurrency()), m_isStopped(
+        true), m_numRunningThreads(0)
 {
 }
 

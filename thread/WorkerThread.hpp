@@ -16,107 +16,171 @@
 typedef boost::thread BThread;
 typedef BThread::id BThreadId;
 
-enum ThreadState {
-	THREAD_STATE_STOPPED = 0,
-	THREAD_STATE_PENDING /* Ready to stop */,
-	THREAD_STATE_RUNNING
+enum ThreadState
+{
+  THREAD_STATE_STOPPED = 0,
+  THREAD_STATE_PENDING /* Ready to stop */,
+  THREAD_STATE_RUNNING
 };
 
-enum ThreadPriority {
-	THREAD_PRIORITY_TIME_CRITICAL = 0,
-	THREAD_PRIORITY_HIGHEST,
-	THREAD_PRIORITY_ABOVE_NORMAL,
-	THREAD_PRIORITY_NORMAL,
-	THREAD_PRIORITY_BELOW_NORMAL,
-	THREAD_PRIORITY_LOWEST,
-	THREAD_PRIORITY_IDLE
+enum ThreadPriority
+{
+  THREAD_PRIORITY_TIME_CRITICAL = 0,
+  THREAD_PRIORITY_HIGHEST,
+  THREAD_PRIORITY_ABOVE_NORMAL,
+  THREAD_PRIORITY_NORMAL,
+  THREAD_PRIORITY_BELOW_NORMAL,
+  THREAD_PRIORITY_LOWEST,
+  THREAD_PRIORITY_IDLE
 };
 
-enum CallableState {
-	CALLABLE_STATE_NEW = 0,
-	CALLABLE_STATE_PENDING,
-	CALLABLE_STATE_DONE
+enum CallableState
+{
+  CALLABLE_STATE_NEW = 0, CALLABLE_STATE_PENDING, CALLABLE_STATE_DONE
 };
 
-enum CallablePriority {
-	CALLABLE_PRIORITY_HIGHEST = 0,
-	CALLABLE_PRIORITY_ABOVE_NORMAL,
-	CALLABLE_PRIORITY_NORMAL,
-	CALLABLE_PRIORITY_BELOW_NORMAL,
-	CALLABLE_PRIORITY_LOWEST,
-	CALLABLE_PRIORITY_COUNT
+enum CallablePriority
+{
+  CALLABLE_PRIORITY_HIGHEST = 0,
+  CALLABLE_PRIORITY_ABOVE_NORMAL,
+  CALLABLE_PRIORITY_NORMAL,
+  CALLABLE_PRIORITY_BELOW_NORMAL,
+  CALLABLE_PRIORITY_LOWEST,
+  CALLABLE_PRIORITY_COUNT
 };
 
-static const char* ThreadStateStr[] = { "stopped", "pending", "running" };
+static const char* ThreadStateStr[] =
+  { "stopped", "pending", "running" };
 
-class CallableBase: public boost::noncopyable
+class CallableBase : public boost::noncopyable
 {
 public:
-	CallableBase(): m_arg(nullptr), m_priority(CALLABLE_PRIORITY_NORMAL), m_state(CALLABLE_STATE_NEW) {}
-	CallableBase(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL): m_arg(arg), m_priority(priority), m_state(CALLABLE_STATE_NEW) {}
-	virtual ~CallableBase () {}
+  CallableBase() :
+      m_arg(nullptr), m_priority(CALLABLE_PRIORITY_NORMAL), m_state(
+          CALLABLE_STATE_NEW)
+  {
+  }
+  CallableBase(void* arg, CallablePriority priority = CALLABLE_PRIORITY_NORMAL) :
+      m_arg(arg), m_priority(priority), m_state(CALLABLE_STATE_NEW)
+  {
+  }
+  virtual
+  ~CallableBase()
+  {
+  }
 
-	void SetArg(void* arg) { m_arg = arg; }
+  void
+  SetArg(void* arg)
+  {
+    m_arg = arg;
+  }
 
-	virtual void operator()() = 0;
-	void UpdatePriority(CallablePriority priority) {
-		if(m_priority != priority) {
-			m_priority = priority;
-		}
-	}
-	inline const CallablePriority Priority() const { return m_priority; }
+  virtual void
+  operator()() = 0;
+  void
+  UpdatePriority(CallablePriority priority)
+  {
+    if (m_priority != priority)
+      {
+        m_priority = priority;
+      }
+  }
+  inline const CallablePriority
+  Priority() const
+  {
+    return m_priority;
+  }
 
-	void UpdateState(CallableState state) {
-		if(m_state != state) {
-			m_state = state;
-		}
-	}
-	inline const CallableState State() const { return m_state; }
+  void
+  UpdateState(CallableState state)
+  {
+    if (m_state != state)
+      {
+        m_state = state;
+      }
+  }
+  inline const CallableState
+  State() const
+  {
+    return m_state;
+  }
 
 protected:
-	void* m_arg;
-	CallablePriority m_priority;
-	CallableState m_state;
+  void* m_arg;
+  CallablePriority m_priority;
+  CallableState m_state;
 };
 
-class WorkerThread: public boost::noncopyable {
+class WorkerThread : public boost::noncopyable
+{
 
-	typedef void (WorkerThread::*THREAD_PROC)(void);
+  typedef void
+  (WorkerThread::*THREAD_PROC)(void);
 
 public:
-	explicit WorkerThread(ThreadPriority thrPriority = THREAD_PRIORITY_NORMAL, bool autoStart = false);
-	virtual ~WorkerThread();
+  explicit
+  WorkerThread(ThreadPriority thrPriority = THREAD_PRIORITY_NORMAL,
+      bool autoStart = false);
+  virtual
+  ~WorkerThread();
 
-	inline bool Running() const {
-		return (m_threadState == THREAD_STATE_RUNNING);
-	}
-	inline bool Pending() const {
-		return (m_threadState == THREAD_STATE_PENDING);
-	}
-	inline bool Stopped() const {
-		return (m_threadState == THREAD_STATE_STOPPED);
-	}
+  inline bool
+  Running() const
+  {
+    return (m_threadState == THREAD_STATE_RUNNING);
+  }
+  inline bool
+  Pending() const
+  {
+    return (m_threadState == THREAD_STATE_PENDING);
+  }
+  inline bool
+  Stopped() const
+  {
+    return (m_threadState == THREAD_STATE_STOPPED);
+  }
 
-	inline void SetCallable(CallableBase* pCallable) { if(pCallable != nullptr) { m_pCallable = pCallable; } }
-	inline BThreadId GetThreadId() const { return m_bThread.get_id(); }
-	bool Start();
-	void Detach();
-	void Stop();
-	void ChangeThreadPriority(ThreadPriority p);
-	const ThreadState GetThreadState() const { return m_threadState; }
+  inline void
+  SetCallable(CallableBase* pCallable)
+  {
+    if (pCallable != nullptr)
+      {
+        m_pCallable = pCallable;
+      }
+  }
+  inline BThreadId
+  GetThreadId() const
+  {
+    return m_bThread.get_id();
+  }
+  bool
+  Start();
+  void
+  Detach();
+  void
+  Stop();
+  void
+  ChangeThreadPriority(ThreadPriority p);
+  const ThreadState
+  GetThreadState() const
+  {
+    return m_threadState;
+  }
 
 protected:
-	void ThreadProc(void);
+  void
+  ThreadProc(void);
 
 protected:
-	BThread m_bThread;
-	volatile ThreadState m_threadState;
-	ThreadPriority m_threadPriority;
-	CallableBase* m_pCallable;
+  BThread m_bThread;
+  volatile ThreadState m_threadState;
+  ThreadPriority m_threadPriority;
+  CallableBase* m_pCallable;
 
 private:
-	virtual void PrivateThreadProc(void) /*= 0*/;
-	THREAD_PROC m_threadProc;
+  virtual void
+  PrivateThreadProc(void) /*= 0*/;
+  THREAD_PROC m_threadProc;
 };
 
 #endif /* THREAD_WORKERTHREAD_HPP_ */
