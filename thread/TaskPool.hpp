@@ -354,10 +354,8 @@ LocalTaskPool::CreateAndStartThread()
         {
           boost::lock_guard<boost::mutex> guard(m_synchSuite.mtxThreadsMap);
           m_runningThreadsMap.push_back(thr);
-          /*
-           std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(),
-           ThreadStateCompare<WorkerThread>());
-           */
+          std::sort(m_runningThreadsMap.begin(), m_runningThreadsMap.end(),
+          ThreadStateCompare<WorkerThread>());
         }
       m_numRunningThreads.fetch_add(1);
     }
