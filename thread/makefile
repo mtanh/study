@@ -36,7 +36,7 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
 $(ODIR)/%.o: %.cxx $(DEPS)
-	$(CXX) -std=c++11 -c -o $@ $< $(CXXFLAGS) $(DEFINES) $(IDIR) $(COMMONFLAGS)
+	$(CXX) -std=c++0x -c -o $@ $< $(CXXFLAGS) $(DEFINES) $(IDIR) $(COMMONFLAGS)
 
 $(BIN_FILE): $(OBJ)
 	$(CXX) -o $@ $^ $(LIBS)

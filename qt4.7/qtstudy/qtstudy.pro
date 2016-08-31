@@ -11,8 +11,20 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    combobox.cpp \
+    filedialog.cpp \
+    models/standardmodel.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    combobox.h \
+    filedialog.h \
+    models/standardmodel.h
 
 FORMS    += mainwindow.ui
+
+
+
+
+
+

@@ -3,9 +3,13 @@
 
 #include <QMainWindow>
 
+class QStandardItemModel;
+
 namespace Ui {
     class MainWindow;
 }
+
+class FileDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -17,6 +21,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QStandardItemModel *m_tableModel;
 };
 
 #endif // MAINWINDOW_H
