@@ -4,24 +4,24 @@
 class Builder
 {
 public:
-	Builder();
-	~Builder();
-	
+  Builder();
+  ~Builder();
+
 private:
-	int mGeneration;
+  int mGeneration;
 };
 
 class DGSServer
 {
 public:
-	DGSServer();
-	~DGSServer();
+  DGSServer();
+  ~DGSServer();
 
-	void StartServer();
+  void StartServer();
 
 private:
-	Builder *mBuilder_;
-	int mGeneration_;
+  Builder *mBuilder_;
+  int mGeneration_;
 };
 
 #endif

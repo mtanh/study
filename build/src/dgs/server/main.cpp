@@ -3,8 +3,8 @@
 
 int main( int argc, char* argv[] )
 {
-	DGSStart();
-	
-	LogPrintf( "Done", LOG_INFO );
-	return 0;
+  DGSStart();
+
+  LogPrintf( "Done", LOG_INFO );
+  return 0;
 }

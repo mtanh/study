@@ -1,12 +1,10 @@
 include ./mk/preface.mk
 
-all: clean cleanall
-
-.PHONY: clean cleanall
-
+all:
+	
+	
+.PHONY: clean
 clean:
-	
-cleanall:
-	
+	rm -fr $(INNOLOGIX_OBJ_DIR) $(INNOLOGIX_TARGET_DIR)
 
 include ./mk/target.mk

@@ -24,5 +24,5 @@ DGSServer::~DGSServer()
 
 void DGSServer::StartServer()
 {
-	LogPrintf( "StartServer", LOG_INFO );
+  LogPrintf( "StartServer", LOG_INFO );
 }

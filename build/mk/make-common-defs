@@ -1,0 +1,8 @@
+# This can be included from Makefile. Allow us define the specific configurations depend on the current platform
+# such as shared object extension, library path, system include path, ....
+
+OSNAME ?= $(shell uname)
+
+ifeq ($(OSNAME), Linux)
+include $(MAKE_DIR)/make-common-defs.linux
+endif

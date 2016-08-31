@@ -6,6 +6,6 @@ static DGSServer dgsServer;
 
 void DGSStart( void )
 {
-	//LogPrintf( "DGSStart", LOG_INFO );
-	dgsServer.StartServer();
+  //LogPrintf( "DGSStart", LOG_INFO );
+  dgsServer.StartServer();
 }
