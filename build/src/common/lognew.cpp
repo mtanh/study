@@ -3,5 +3,5 @@
 
 void LogPrintf( char *msg, LogLevel level )
 {
-	printf( "%s\n", msg );
+  printf( "%s\n", msg );
 }

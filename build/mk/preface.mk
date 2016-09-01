@@ -8,6 +8,7 @@ MKDIR ?= mkdir -p
 
 MAKE_DIR := $(patsubst %/,%,$(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
+SYSTEM_INC_DIR = /usr/include
 TOP_DIR := $(patsubst %/,%,$(dir $(realpath $(MAKE_DIR))))
 SRC_DIR := $(TOP_DIR)/src
 INC_DIR := $(TOP_DIR)/inc
@@ -20,8 +21,8 @@ endif
 
 CPP_FLAGS := -I$(INC_DIR)
 
-COMPILER_CPP ?= $(COMPILER) -std=c++0x $(DEBUG_MODE) -O0 -fPIC -c $(CPP_FLAGS) -o
-LINK_EXE ?= $(COMPILER_CPP) $(DEBUG_MODE) -O0 -fPIC $(LINK_FLAGS) -o
+COMPILER_CPP ?= $(COMPILER) -Wall -std=c++0x $(DEBUG_MODE) -c -O0 -fPIC $(CPP_FLAGS) -o 
+LINK_EXE ?= $(COMPILER) $(DEBUG_MODE) -Wall -O0 -fPIC $(LINK_FLAGS) -o
 
 #OSNAME := $(shell uname)
 TARGET_OS := $(shell $(COMPILER) -dumpmachine)
@@ -31,11 +32,13 @@ INNOLOGIX_TARGET_DIR := $(shell cd $(TARGET_DIR)/$(strip $(TARGET_OS)); pwd)
 INNOLOGIX_OBJ_DIR := $(INNOLOGIX_TARGET_DIR)/obj
 NOOP := $(shell $(MKDIR) $(INNOLOGIX_OBJ_DIR))
 
-SYSTEM_INC_DIR = /usr/include
-LIBEVENT_INC_DIR ?= $(SYSTEM_INC_DIR)
-LIBEVENT_LIB_DIR ?= /usr/lib/$(TARGET_OS)
+OBJ_FILE = $(subst .cpp,.o,$(notdir $(SRC)))
+OBJ = $(addprefix $(INNOLOGIX_OBJ_DIR)/,$(OBJ_FILE))
 
-CPP_FLAGS := $(CPP_FLAGS) -I$(SYSTEM_INC_DIR) -I$(LIBEVENT_INC_DIR)
-LINK_SO := -L$(LIBEVENT_LIB_DIR) -levent
+#LIBEVENT_INC_DIR ?= $(SYSTEM_INC_DIR)
+#LIBEVENT_LIB_DIR ?= /usr/lib/$(TARGET_OS)
 
-#$(info $(LINK_SO))
+#CPP_FLAGS := $(CPP_FLAGS) #-I$(SYSTEM_INC_DIR) -I$(LIBEVENT_INC_DIR)
+#LINK_SO := -L$(LIBEVENT_LIB_DIR) -levent
+
+#$(info $(COMPILER_CPP))
